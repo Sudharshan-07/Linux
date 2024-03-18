@@ -1,8 +1,0 @@
-### what is the need for sysfs filesystem?:
-1. sysfs is a feature of the Linux kernel 2.6 that allows kernel code to export information to user processes via an in-memory filesystem. The organization of the filesystem directory is
-strict and based the internal organization of kernel data structures.
-2. sysfs is a mechanism of representing kernel objects(kobjects), their attributes, and their relationships with each other. It provides two components: a kernel programming interface for
-   exporting these items via sysfs and a user interface to view and manipulate these items that map back to kernel objects that they represent.
-3. The table below shows the mapping between their internal(kernel) constructs and external(userspace) sysfs mappings.
-   <img width="400" alt="Screenshot 2024-03-19 at 5 15 48 AM" src="https://github.com/Sudharshan-07/Linux/assets/52316856/a32b1819-4bb9-4525-b0e8-3a913c16aa97">
-

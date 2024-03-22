@@ -263,6 +263,3 @@ References:
 2. https://medium.com/powerof2/the-kernel-kobject-device-model-explained-89d02350fa03
 3. https://mirrors.edge.kernel.org/pub/linux/kernel/people/mochel/doc/papers/ols-2005/mochel.pdf
 4. https://gist.github.com/carloscn/3f0179ecfa599969556e86eb80555266#user-content-fnref-2-443c0747c05ab3e7bb6acd3ca6f58809
-5. 
-
-

@@ -257,3 +257,12 @@ So far, Kobject mainly provides the following functions:
 *Note 2: Linux driver developers rarely use Kobject and the interfaces it provides **directly**. Instead, they use the device model interface built on Kobject(i.e, which means kobject acts as an abstract or base class of core data structure in the kernel).*
 
 *Note 3: Kobject is the ultimate embodiment of object-oriented thinking in the Linux kernel, but the advantages of the C language don't support OOPs, so the Linux kernel needs to use more clever (and verbose) means to implement it.*
+
+References:
+1. [https://www.oreilly.com/library/view/linux-device-drivers/0596005903/](https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch14.html)
+2. https://medium.com/powerof2/the-kernel-kobject-device-model-explained-89d02350fa03
+3. https://mirrors.edge.kernel.org/pub/linux/kernel/people/mochel/doc/papers/ols-2005/mochel.pdf
+4. https://gist.github.com/carloscn/3f0179ecfa599969556e86eb80555266#user-content-fnref-2-443c0747c05ab3e7bb6acd3ca6f58809
+5. 
+
+

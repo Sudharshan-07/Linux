@@ -58,7 +58,7 @@ Before we delve into the specifics, let us first gain an understanding of the so
 **Device driver layer(L4)**
 - This part is the user of the interrupt pin(device drivers), which registers through interrupt-related interfaces, and finally calls interrupt handlers for processing when the peripheral triggers an interrupt.
 
-This article will first cover the principles and drivers related to hardware, and then focus directly on the core topics.
+To better understand the concept, we need to examine the software stack from the bottom to the top(i.e. from level L1 to L4). 
 
 ### What problem are we examining here?
   Let's clearly outline the objectives of our analysis:
@@ -72,13 +72,26 @@ This article will first cover the principles and drivers related to hardware, an
 
 ### Hardware layer (L1):
 
-In addition to the [Hardware view](https://github.com/Sudharshan-07/Linux/edit/Linux-driver-model/Interrupt-part-2.md#hardware-view), lets take an example of ARM based interrupt controller's design:
+In addition to the [Hardware view](https://github.com/Sudharshan-07/Linux/edit/Linux-driver-model/Interrupt-part-2.md#hardware-view), let's take an example of ARM-based interrupt controller's(GIC-v2) design. 
+
+Here is a functional block diagram:
 
 <img width="596" alt="ARM-Intrctrlr-design" src="https://github.com/user-attachments/assets/2c129e3f-2242-45e8-9f9d-d374b6640d0b">
 
+Let's touch on how the GIC-v2 operates:
+
+GIC-V2 supports three types of interrupts:
+
+**1. SGI (Software-Generated Interrupts):** These interrupts are used primarily for inter-core communication. The kernel's Inter-Processor Interrupts (IPI) are based on SGIs, with interrupt numbers ranging from ID0 to ID15 designated for SGIs.
+
+**2. PPI (Private Peripheral Interrupts):** Each CPU has its own set of private interrupts, typically used for local timers. The interrupt numbers ID16 to ID31 are assigned for PPIs.
+
+**3. PI (Shared Peripheral Interrupts):** These interrupts can be routed to a specific CPU after they occur. Interrupt numbers ID32 to ID1019 are used for SPIs, with ID1020 to ID1023 reserved for special purposes.
+
+The process of GIC interrupt detection is, The GIC captures the interrupt signal, asserts it, and marks it as pending. The distributor determines the target CPU and sends the interrupt signal to it. Concurrently, for each CPU, the distributor selects the highest priority interrupt from the pending signals and sends it to the CPU interface. The CPU interface in the GIC decides whether to forward the interrupt signal to the target CPU. After the CPU completes interrupt processing, it sends a completion signal (EOI - End of Interrupt) to the GIC.
 
 
-
+### Architecture-dependent Layer(L2);
 
 
 

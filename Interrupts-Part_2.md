@@ -133,12 +133,38 @@ After all, How is the device tree information processed by the kernel?. The Devi
 ###### Here is a diagram that provides a brief overview of the call flow on how a DTB is unflattened and converted into "struct device_node" data structures:
 ![DTS_Parsing](https://github.com/user-attachments/assets/b4e85f74-f407-4297-9bf6-f5d2f1e1cf53)
 
+<br>
 
+#### > L_2.2: Analysis of the GIC controller's driver
 
+The operation of the GIC is fundamentally driven by interrupt signals. Therefore, the GIC driver's task is to initialize various data and register the appropriate callback functions to ensure they are executed when an interrupt signal is received.
 
+##### The following figure illustrates the execution flow of the GIC driver initialization, detailing the kernel initialization and how the device tree-based IRQ controller is initialized:
 
+![GIC-STARTUP-FLOW](https://github.com/user-attachments/assets/63e8e393-ec44-4572-b3a7-5cd6de95f40f)
 
+First, it's important to understand the **"vmlinux.lds"** link script. This script defines a segment called **__irqchip_of_table**. In the GIC's device driver, the **IRQCHIP_DECLARE** macro eventually defines [struct of_device_id](https://github.com/torvalds/linux/blob/master/include/linux/of.h#L1523), including compatible fields and callback functions. This macro places the "struct of_device_id" into the __irqchip_of_table segment.
 
+This table also has the device ID information of all the interrupt controllers that the kernel supports(for each architecture). the information about the interrupt controllers (used to match with the device node) is stored in the **.init.ramfs** section of the kernel image. The "of_irq_init" function scans the device tree for matching interrupt controller nodes and invokes their corresponding init functions in sequence, starting with the parent nodes.
 
+##### Below is a snippet from the **System.map** file, generated after linking all the kernel objects. It includes the symbol **__irqchip_of_table** and its starting base address, which contains entries for the interrupt controller nodes defined in the device tree:
+<br>
+<img width="1106" alt="system_map_irq" src="https://github.com/user-attachments/assets/28b36aa0-5c35-4a78-b3a8-cfe11b4563d9">
+<br>
+<br>
 
+During kernel startup initialization, the "of_irq_init" function searches for device node information. The parameter passed to this function is the "__irqchip_of_table" segment. Since the IRQCHIP_DECLARE macro has filled in the necessary information, the of_irq_init function will find the corresponding device node for "arm,gic-400" and obtain the device information. The interrupt controller cascading is also handled within the of_irq_init function(which we will analyze in another example that has multiple interrupt controllers).
 
+Within the of_irq_init function, the callback function declared by IRQCHIP_DECLARE will eventually be called, which is gic_of_init. This function serves as the initialization entry point for the GIC driver.
+
+**From the call flow represented above we can understand that:**
+
+- The function pointer **__smp_cross_call** is assigned to **gic_raise_softirq** by **set_smp_process_call**(as per kernel v4.10). This setup triggers the GIC using a software-generated SGI interrupt for inter-core communication.
+
+- The **cpuhp_setup_state_nocalls** function sets the GIC callback function for CPU hot-plug events, allowing appropriate processing when the CPU is hot-plugged.
+ 
+- The setting of the **set_handle_irq** function is crucial. It assigns the global function pointer **handle_arch_irq** to **gic_handle_irq**. When the processor encounters an interrupt exception, it jumps to ***handle_arch_irq*** for execution, making it the entry point for interrupt processing.
+
+The driver registers various functions and initializes structures such as irq_chip and irq_domain, which will be analyzed further below in detail. Finally, it completes the initialization settings of the GIC hardware module and handles the registrations related to power management.
+
+  

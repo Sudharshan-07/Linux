@@ -393,7 +393,10 @@ irq_create_mapping(irq_domain, hwirq)
 			}
 ```
 
-So, the process of linking an irq_chip with an irq_desc is implemented either during the initialization of the interrupt controller (using irq_set_chip) or during the hardware-to-software IRQ mapping (while calling irq_create_mapping). In both cases, the actual function definition resides in the interrupt controller's device driver (at the L2 level). Below diagram shows an overview of the link:
+So, the process of linking an irq_chip with an irq_desc is implemented either during the initialization of the interrupt controller (using irq_set_chip) or during the hardware-to-software IRQ mapping (while calling irq_create_mapping). In both cases, the actual function definition resides in the interrupt controller's device driver (at the L2 level).
+
+###### Here's a simplified illustration of the irq_set_chip() function linking an irq_chip with an irq_desc for an interrupt:
+<br>
 
 ![irq_chip-6](https://github.com/user-attachments/assets/b7cb7092-7100-41f0-916b-9955517fbf9f)
 

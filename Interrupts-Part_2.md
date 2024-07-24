@@ -68,7 +68,7 @@ To better understand the concept, we need to examine the software stack from the
 
 <br>
 
-#### Now, What is the underlying process in the software layers above for identifying the source of an interrupt? Let’s examine the importance of each layer.
+#### Now, To understand how the kernel uses the software layers to identify the source of an interrupt, we need to examine the significance of each layer in the process.
 
 ### Hardware layer (L1):
 
@@ -189,7 +189,73 @@ The **struct irq_domain** structure maps Hardware IRQ numbers to Linux/Software 
 If we closely examined this [section](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) in [Interrupts-part_1](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#-interrupts--), we observed that there are six main IRQ data structures interconnected within the kernel's IRQ subsystem. The question arises: why does the GIC's private data structure only include **struct irq_chip** and **struct irq_domain**, and not the other IRQ data structures such as **irq_desc, irq_data, and irqaction**? Why can't these additional structures be included as well?. Before delving into an in-depth analysis of the irq_chip and irq_domain use cases, let's briefly discuss this topic.
 
 
+[struct irq_chip](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irq.h#L340) provides three main advantages to the kernel drivers(of L3 and L4 level):
+1. **Abstraction:** struct irq_chip indeed acts as an abstraction layer for the interrupt controllers. It provides a unified interface for the kernel to interact with different interrupt controllers.
 
+2. **Standardized Interface:** By using struct irq_chip, the kernel can handle interrupt pins in a standardized manner. This abstraction allows the kernel to interact with different interrupt pins consistently.
+
+3. **Simplified Handling:** With struct irq_chip, the kernel avoids the complexity of implementing separate, detailed handling functions for each interrupt controller. Instead, the kernel can rely on the standardized methods provided by struct irq_chip to manage interrupts.
+
+The GIC driver defines the irq_chip to work with the interrupt lines of the GIC. It provides the low-level operations needed to manage interrupts.
+
+```
+/drivers/irqchip/irq-gic.c
+
+static struct irq_chip gic_chip = {
+	.irq_mask		= gic_mask_irq,
+	.irq_unmask		= gic_unmask_irq,
+	.irq_eoi		= gic_eoi_irq,
+	.irq_set_type		= gic_set_type,
+	.irq_get_irqchip_state	= gic_irq_get_irqchip_state,
+	.irq_set_irqchip_state	= gic_irq_set_irqchip_state,
+	.flags			= IRQCHIP_SET_TYPE_MASKED |
+				  IRQCHIP_SKIP_SET_WAKE |
+				  IRQCHIP_MASK_ON_SUSPEND,
+};
+
+Initialization of struct irq_chip for GIC controller:
+=====================================================
+static void gic_init_chip(struct gic_chip_data *gic, struct device *dev,
+			  const char *name, bool use_eoimode1)
+{
+	/* Initialize irq_chip */
+	gic->chip = gic_chip; <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Initialize irq_chip for GIC
+	gic->chip.name = name;
+	gic->chip.parent_device = dev;
+
+	if (use_eoimode1) {
+		gic->chip.irq_mask = gic_eoimode1_mask_irq;
+		gic->chip.irq_eoi = gic_eoimode1_eoi_irq;
+		gic->chip.irq_set_vcpu_affinity = gic_irq_set_vcpu_affinity;
+	}
+
+#ifdef CONFIG_SMP
+	if (gic == &gic_data[0])
+		gic->chip.irq_set_affinity = gic_set_affinity;
+#endif
+}
+
+```
+
+[struct irq_domain](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L125), provides a way to map and manage the hierarchy and translation of interrupts numbers between the hardware IRQ to Software/Linux irq numbers.
+
+```
+/drivers/irqchip/irq-gic.c
+
+static const struct irq_domain_ops gic_irq_domain_hierarchy_ops = {
+	.translate = gic_irq_domain_translate, <<<< hw-irq to sw-irq translation function
+	.alloc = gic_irq_domain_alloc,
+	.free = irq_domain_free_irqs_top,
+};
+
+static const struct irq_domain_ops gic_irq_domain_ops = {
+	.map = gic_irq_domain_map,
+	.unmap = gic_irq_domain_unmap,
+};
+```
+
+
+The irq_chip and irq_domain structures are focused on providing an interface for managing and mapping interrupts at the hardware level. They handle the core functions of interacting with the interrupt controller and managing the mapping of interrupts between the hardware and the kernel. Therefore, ***struct irq_chip and struct irq_domain*** are handled at the L2 level of the software layer. Since they manage interactions at the controller level, they are incorporated into the interrupt controller's private data structures.
 
 
 

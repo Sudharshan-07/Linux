@@ -173,9 +173,28 @@ The driver registers various functions and initializes structures such as **stru
 ### > L_2.2.1: GIC private data structure analysis
 
 Let's delve into the GIC's private data structure and examine the fields it contains, below is the illustration:
+
 <br>
+
 ![GIC-DS-1](https://github.com/user-attachments/assets/4839da0c-bbd9-4a1f-9fb8-142b7c38a462)
+
 <br>
+
+In the GIC driver, the struct gic_chip_data structure contains information about the GIC controller. The GIC driver focuses on initializing this structure and setting up function pointers. The driver’s operations are activated by interrupt signals, causing the callback functions to be invoked when an interrupt occurs.
+
+The **struct irq_chip** structure defines the set of low-level operations for the interrupt controller, which ultimately controls the hardware.
+
+The **struct irq_domain** structure maps Hardware IRQ numbers to Linux/Software IRQ numbers (virq, virtual interrupt numbers).
+
+If we closely examined this [section](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) in [Interrupts-part_1](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#-interrupts--), we observed that there are six main IRQ data structures interconnected within the kernel's IRQ subsystem. The question arises: why does the GIC's private data structure only include **struct irq_chip** and **struct irq_domain**, and not the other IRQ data structures such as **irq_desc, irq_data, and irqaction**? Why can't these additional structures be included as well?. Before delving into an in-depth analysis of the irq_chip and irq_domain use cases, let's briefly discuss this topic.
+
+
+
+
+
+
+
+
 
 
 

@@ -121,8 +121,17 @@ For example, a value of 3 is used. In the device tree, you might see an entry li
 An important point to consider here is that within the device tree, a logical interrupt tree exists that mimics the hierarchy and routing of interrupts in an SoC. While generically referred to as an interrupt tree it is more technically a directed acyclic graph. The physical wiring of an interrupt source to an interrupt controller is represented in the device tree with the help of the "interrupt-parent" property. Device nodes that represent interrupt-generating devices contain an "interrupt-parent" property which has a "phandle" value that points to the device to which the device’s interrupts are routed, typically an interrupt controller. If an interrupt-generating device does not have an interrupt-parent property, its interrupt parent is assumed to be an interrupt controller device node that resides in the root of the device tree.
 
 ###### Below is the overview of how the interrupt routing is done in a device tree by mimicking the hierarchy and routing of interrupts in an SoC:
-<img width="744" alt="DTS-interrupt-tree-logic" src="https://github.com/user-attachments/assets/64e499f1-4804-4ed5-a46f-72c9e62e42d2">
 <br>
+
+<img width="744" alt="DTS-interrupt-tree-logic" src="https://github.com/user-attachments/assets/64e499f1-4804-4ed5-a46f-72c9e62e42d2">
+
+##### ***Reference Spec:https://github.com/devicetree-org/devicetree-specification/releases/download/v0.3/devicetree-specification-v0.3.pdf***
+<br>
+
+After all, How is the device tree information processed by the kernel?. The Device Tree Source(DTS) is compiled into a DTB file and passed to the kernel through the bootloader. When the kernel starts, it parses and converts the DTB file into a "struct device_node" data structure which maintains a hierarchical tree in the memory. Devices and drivers are matched and bound based on the compatible string.
+
+###### Here is a diagram that provides a brief overview of the call flow on how a DTB is unflattened and converted into "struct device_node" data structures:
+![DTS_Parsing](https://github.com/user-attachments/assets/b4e85f74-f407-4297-9bf6-f5d2f1e1cf53)
 
 
 

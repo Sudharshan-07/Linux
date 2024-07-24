@@ -254,16 +254,13 @@ static const struct irq_domain_ops gic_irq_domain_ops = {
 };
 ```
 
-
 The irq_chip and irq_domain structures are focused on providing an interface for managing and mapping interrupts at the hardware level. They handle the core functions of interacting with the interrupt controller and managing the mapping of interrupts between the hardware and the kernel. Therefore, ***struct irq_chip and struct irq_domain*** are handled at the L2 level of the software layer. Since they manage interactions at the controller level, they are incorporated into the interrupt controller's private data structures.
 
+on the contrary, **struct irq_desc, irq_data, and irqaction** focus on managing and processing individual IRQs, which are distinct from handling the core functionality of the interrupt controller. These structures are concerned with higher-level interrupt management and processing and are used elsewhere in the kernel's interrupt subsystem once they are mapped and managed by the irq_chip and irq_domain during the init of the main interrupt controller.
 
+However, it is crucial to understand that despite their distinct roles, **struct irq_chip, irq_domain, irq_desc, irq_data, and irqaction** need to be linked together to enable proper interrupt processing and handling.
 
-
-
-
-
-
+<br>
 
 ### > L_2.2.2: irq_chip analysis:
 

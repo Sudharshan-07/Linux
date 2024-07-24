@@ -360,7 +360,7 @@ int irq_set_chip(unsigned int irq, struct irq_chip *chip)
 	 * For !CONFIG_SPARSE_IRQ make the irq show up in
 	 * allocated_irqs.
 	 */
-	irq_mark_irq(irq);
+	irq_mark_irq(irq); <<<<<<<<< explained below.
 	return 0;
 }
 EXPORT_SYMBOL(irq_set_chip);
@@ -402,6 +402,12 @@ So, the process of linking an irq_chip with an irq_desc is implemented either du
 
 <br>
 
+```
+Note:
+In irq_set_chip(), if sparse IRQ(CONFIG_SPARSE_IRQ) is not used, we mark the corresponding bit in the allocated_irqs bitmap to indicate the irq is in use.
+```
+
+![irq_mark_irq-1a](https://github.com/user-attachments/assets/ddad499f-3141-44ac-b625-c1cb9f4d7c57)
 
 
 

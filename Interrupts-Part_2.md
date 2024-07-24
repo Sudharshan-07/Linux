@@ -258,7 +258,7 @@ The irq_chip and irq_domain structures are focused on providing an interface for
 
 on the contrary, **struct irq_desc, irq_data, and irqaction** focus on managing and processing individual IRQs, which are distinct from handling the core functionality of the interrupt controller. These structures are concerned with higher-level interrupt management and processing and are used elsewhere in the kernel's interrupt subsystem once they are mapped and managed by the irq_chip and irq_domain during the init of the main interrupt controller.
 
-However, it is crucial to understand that despite their distinct roles, **struct irq_chip, irq_domain, irq_desc, irq_data, and irqaction** need to be linked together to enable proper interrupt processing and handling.
+However, it is crucial to understand that despite their distinct roles, **struct irq_chip, irq_domain, irq_desc, irq_data, and irqaction** need to be linked together to enable proper interrupt processing and handling. We will delve deeper into each structure to explore how they contribute to interrupt handling and management.
 
 <br>
 

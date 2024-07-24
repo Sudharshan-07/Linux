@@ -29,6 +29,10 @@ Each architecture has a different interrupt controller configuration, so let's b
 
 ![interrupt-1a](https://github.com/user-attachments/assets/f41971c3-b870-433e-8537-7d88d8104ed7)
 
+Reviewing the above depictions, it is natural to be unclear(from software point of view) about how the CPU determines the source of an interrupt from different peripherals. This will be addressed in the upcoming sections, where we will explore the data structures used to identify the interrupt source, as well as the roles of an architecture-dependent and hardware-independent interrupt framework implementation in the Linux kernel.
+
+
+
 
 
 

@@ -91,7 +91,41 @@ GIC-V2 supports three types of interrupts:
 The process of GIC interrupt detection is, The GIC captures the interrupt signal, asserts it, and marks it as pending. The distributor determines the target CPU and sends the interrupt signal to it. Concurrently, for each CPU, the distributor selects the highest priority interrupt from the pending signals and sends it to the CPU interface. The CPU interface in the GIC decides whether to forward the interrupt signal to the target CPU. After the CPU completes interrupt processing, it sends a completion signal (EOI - End of Interrupt) to the GIC.
 
 
-### Architecture-dependent Layer(L2);
+### Architecture-dependent Layer(L2):
+In this layer, we will look into two aspects that uncover the underlying mechanism that processes and manages the interrupt controllers in an SoC. 
+
+Before delving into the actual data flow, let's first understand the process involved when the kernel locates and initializes an interrupt controller. During the initialization of the interrupt controller, various data structures come into play to manage and control the interrupt controllers. 
+
+Breaking down the analysis of the L2 layer into two steps:
+
+- L_2.1: How does the kernel locate information about the interrupt controller?
+- L_2.2: Analysis of the GIC controller's driver.
+
+#### > L_2.1: How does the kernel locate information about the interrupt controller?
+
+The ARM platform device information is incorporated through the device tree(DTS). This information is placed in the "arch/arm64/boot/dts/" directory.
+
+The following figure illustrates the device tree information for an interrupt controller:
+
+![DTS](https://github.com/user-attachments/assets/e679706c-7fea-4b25-bcca-b0cddbe8ea67)
+
+**compatible:** Used to match a specific driver. For instance, in the example of "arm,gic-400," this field helps in matching the appropriate driver based on the compatible string.
+
+**interrupt-cells:** Specifies the number of units required to describe an interrupt source. 
+For example, a value of 3 is used. In the device tree, you might see an entry like interrupts = <0 23 4> in a device node that uses the "gic" as the parent interrupt controller, where the first unit (0) indicates the interrupt type (1 for PPI, 0 for SPI), the second unit (23) denotes the interrupt number(or the interrupt pin) used by the driver, and the third unit (4) represents the interrupt trigger type.
+
+**reg:** Describes the address and address range of the interrupt controller. For example, it specifies the address information for the GIC Distributor (GICD) and the GIC CPU Interface (GICC) which can be used to memory map in the controller driver to communicate with the device.
+
+**interrupt-controller:** Indicates that the device is an interrupt controller to which peripherals can be connected.
+
+An important point to consider here is that within the device tree, a logical interrupt tree exists that mimics the hierarchy and routing of interrupts in an SoC. While generically referred to as an interrupt tree it is more technically a directed acyclic graph. The physical wiring of an interrupt source to an interrupt controller is represented in the device tree with the help of the "interrupt-parent" property. Device nodes that represent interrupt-generating devices contain an "interrupt-parent" property which has a "phandle" value that points to the device to which the device’s interrupts are routed, typically an interrupt controller. If an interrupt-generating device does not have an interrupt-parent property, its interrupt parent is assumed to be an interrupt controller device node that resides in the root of the device tree.
+
+###### Below is the overview of how the interrupt routing is done in a device tree by mimicking the hierarchy and routing of interrupts in an SoC:
+<br>
+<img width="744" alt="DTS-interrupt-tree-logic" src="https://github.com/user-attachments/assets/64e499f1-4804-4ed5-a46f-72c9e62e42d2">
+<br>
+
+
 
 
 

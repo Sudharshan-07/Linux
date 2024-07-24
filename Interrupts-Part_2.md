@@ -100,6 +100,9 @@ Breaking down the analysis of the L2 layer into two steps:
 
 - L_2.1: How does the kernel locate information about the interrupt controller?
 - L_2.2: Analysis of the GIC controller's driver.
+  - L_2.2.1: GIC's private data structure analysis.
+  - L_2.2.2: irq_chip analysis.
+  - L_2.2.3: irq_domain analysis.
 
 #### > L_2.1: How does the kernel locate information about the interrupt controller?
 
@@ -166,5 +169,17 @@ Within the of_irq_init function, the callback function declared by IRQCHIP_DECLA
 - The setting of the **set_handle_irq** function is crucial. It assigns the global function pointer **handle_arch_irq** to **gic_handle_irq**. When the processor encounters an interrupt exception, it jumps to ***handle_arch_irq*** for execution, making it the entry point for interrupt processing.
 
 The driver registers various functions and initializes structures such as **struct irq_chip** and **struct irq_domain**, which will be analyzed further below in detail. Finally, it completes the initialization settings of the GIC hardware module and handles the registrations related to power management.
+
+### > L_2.2.1: GIC private data structure analysis
+
+Let's delve into the GIC's private data structure and examine the fields it contains, below is the illustration:
+<br>
+![GIC-DS-1](https://github.com/user-attachments/assets/4839da0c-bbd9-4a1f-9fb8-142b7c38a462)
+<br>
+
+
+
+
+### > L_2.2.2: irq_chip analysis:
 
   

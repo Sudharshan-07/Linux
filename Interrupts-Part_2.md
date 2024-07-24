@@ -165,6 +165,6 @@ Within the of_irq_init function, the callback function declared by IRQCHIP_DECLA
  
 - The setting of the **set_handle_irq** function is crucial. It assigns the global function pointer **handle_arch_irq** to **gic_handle_irq**. When the processor encounters an interrupt exception, it jumps to ***handle_arch_irq*** for execution, making it the entry point for interrupt processing.
 
-The driver registers various functions and initializes structures such as irq_chip and irq_domain, which will be analyzed further below in detail. Finally, it completes the initialization settings of the GIC hardware module and handles the registrations related to power management.
+The driver registers various functions and initializes structures such as **struct irq_chip** and **struct irq_domain**, which will be analyzed further below in detail. Finally, it completes the initialization settings of the GIC hardware module and handles the registrations related to power management.
 
   

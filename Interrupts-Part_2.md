@@ -267,21 +267,21 @@ Let's go in-depth and understand and visualize irq_chip with some illustrations.
 
 As we discussed above, The IRQ chip manages the hardware control for the interrupt controller driver. Each manufacturer's interrupt controllers handle interrupt lines differently. The IRQ chip in the Linux IRQ core layer abstracts and unifies the management of these different controllers on an interrupt pin-by-pin basis. It offers services such as mask, set, or clear, etc.. for each interrupt line/pin. These operations are handled via callback functions linked to several hook pointers in the irq_chip structure.
 
-If the processing, masking, and set/clear handling of interrupt lines vary, the irq_chip can be configured accordingly. In Kernel, the irq_chip which is responsible for managing each interrupt line is set using a function called **irq_set_chip()**. 
+If the processing, masking, setting, and clearing of interrupt lines vary, the irq_chip can be configured accordingly. In Kernel, the irq_chip which is responsible for managing each interrupt line is set using a function called **irq_set_chip()**. 
 
-The figure below illustrates how a single interrupt controller's driver manages all the interrupts through one "struct irq_chip"(refer to above struct irq_chip gic_chip):
+##### The figure below illustrates how a single interrupt controller's driver manages all the interrupts through one "struct irq_chip"(refer to above struct irq_chip gic_chip):
 <br>
 
 ![irq_chip-1](https://github.com/user-attachments/assets/deb0d240-0bca-4c5b-b393-d4f5e34fe83a)
 
 <br>
 
-The following figure shows how an interrupt controller's driver manages its controller's interrupt pins by assigning them to different irq_chips, each handling specific hardware control functions:
+##### The following figure shows how an interrupt controller's driver manages its controller's interrupt pins by assigning them to different irq_chips, each handling specific hardware control functions:
 <br>
 
 ![irq_chip-2](https://github.com/user-attachments/assets/9ea82080-8c65-4951-84b2-f7b4545087d9)
 
-For reference, the bcm2836 interrupt controller's driver handles each interrupt pin with a different irq_chip because each pin's masking must be managed uniquely, making a generic implementation unsuitable in this case:
+###### For reference, the bcm2836 interrupt controller's driver handles each interrupt pin with a different irq_chip because each pin's masking must be managed uniquely, making a generic implementation unsuitable in this case:
 
 ```
 /drivers/irqchip/irq-bcm2836.c
@@ -309,7 +309,7 @@ static struct irq_chip bcm2836_arm_irqchip_gpu = {
 
 <br>
 
-The following figure illustrates a controller driver(A) utilizing two separate irq_chip definitions, while another controller's driver(B) employs a single irq_chip definition due to its design requirements:
+##### The following figure illustrates a controller driver(A) utilizing two separate irq_chip definitions, while another controller's driver(B) employs a single irq_chip definition due to its design requirements:
 
 <br>
 
@@ -317,10 +317,87 @@ The following figure illustrates a controller driver(A) utilizing two separate i
 
 <br>
 
+
+##### The following figure shows how interrupt controllers configured in two or more hierarchies are connected and processed. Interrupts received by child interrupt controller A are cascaded(or chained) to parent interrupt controller B:
+
+<br>
+
+![irq_chip-4](https://github.com/user-attachments/assets/6ed06b37-e863-4197-89b0-e53f54166d3b)
+
+<br>
+
 So far, we have examined how different "struct irq_chip" structures are defined(in a controller driver) to address the specific requirements of interrupt controllers, with examples from GIC and bcm2836 interrupt controller drivers. Furthermore, it is important to understand how an instance(or a pointer) of struct irq_chip is linked to a particular interrupt pin's irq_desc as [depicted here](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) (note: each interrupt pin in the controllers has a unique irq_desc in the kernel).
 
+##### Assign an irq_chip to an irq_desc:
 
+The process of linking an irq_chip with an irq_desc is implemented either during the initialization of the interrupt controller (using irq_set_chip) or during the hardware-to-software IRQ mapping (using irq_create_mapping). In the latter case, the actual function definition for the mapping resides in the interrupt controller's device driver (at the L2 level).
 
+##### Method-1:
+Interrupt controller driver's directly calling irq_set_chip(irq, &irq_chip) during init.
+
+```
+/kernel/irq/chip.c
+
+/**
+ *	irq_set_chip - set the irq chip for an irq
+ *	@irq:	irq number
+ *	@chip:	pointer to irq chip description structure
+ */
+int irq_set_chip(unsigned int irq, struct irq_chip *chip)
+{
+	unsigned long flags;
+	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+
+	if (!desc)
+		return -EINVAL;
+
+	if (!chip)
+		chip = &no_irq_chip;
+
+	desc->irq_data.chip = chip; <<<<<<<< irq_chip is assigned to irq_data which is inside irq_desc.
+	irq_put_desc_unlock(desc, flags);
+	/*
+	 * For !CONFIG_SPARSE_IRQ make the irq show up in
+	 * allocated_irqs.
+	 */
+	irq_mark_irq(irq);
+	return 0;
+}
+EXPORT_SYMBOL(irq_set_chip);
+```
+
+##### Method-2:
+
+irq_set_chip can be called in map function of an irq_domain of an interrupt controller.
+
+```
+/kernel/irq/irqdomain.c
+
+irq_create_mapping(irq_domain, hwirq)
++
++++> irq_domain_associate(domain, virq, hwirq)
+       +
+       +++> domain->ops->map(domain, virq, hwirq);
+                 +
+                 ++++> calls interrupt controller's definition of map function in struct irq_domain_ops:
+
+			static const struct irq_domain_ops my_irq_domain_ops = {
+   				 .map = my_irq_domain_map,
+   				 .translate = my_irq_domain_translate,
+			};
+
+			static int my_irq_domain_map(struct irq_domain *d, unsigned int irq, irq_hw_number_t hwirq) {
+				...
+    				irq_set_chip(virq, &irq_chip);
+				...
+			}
+```
+
+So, the process of linking an irq_chip with an irq_desc is implemented either during the initialization of the interrupt controller (using irq_set_chip) or during the hardware-to-software IRQ mapping (while calling irq_create_mapping). In both cases, the actual function definition resides in the interrupt controller's device driver (at the L2 level). Below diagram shows an overview of the link:
+
+![irq_chip-6](https://github.com/user-attachments/assets/b7cb7092-7100-41f0-916b-9955517fbf9f)
+
+<br>
 
 
 

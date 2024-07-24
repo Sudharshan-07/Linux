@@ -186,8 +186,7 @@ The **struct irq_chip** structure defines the set of low-level operations for th
 
 The **struct irq_domain** structure maps Hardware IRQ numbers to Linux/Software IRQ numbers (virq, virtual interrupt numbers).
 
-If we closely examined this [section](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) in [Interrupts-part_1](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#-interrupts--), we observed that there are six main IRQ data structures interconnected within the kernel's IRQ subsystem. The question arises: why does the GIC's private data structure only include **struct irq_chip** and **struct irq_domain**, and not the other IRQ data structures such as **irq_desc, irq_data, and irqaction**? Why can't these additional structures be included as well?. Before delving into an in-depth analysis of the irq_chip and irq_domain use cases, let's briefly discuss this topic.
-
+If we closely examined this [section](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) in [Interrupts-part_1](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#-interrupts--), we observed that there are six main IRQ data structures interconnected within the kernel's IRQ subsystem. The question arises: why does the GIC's private data structure only include **struct irq_chip** and **struct irq_domain**, and not the other IRQ data structures such as **irq_desc, irq_data, and irqaction**? Why can't these additional structures be included as well?. Before delving into an in-depth analysis of the irq_chip and irq_domain use cases, let's briefly discuss this topic now.
 
 [struct irq_chip](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irq.h#L340) provides three main advantages to the kernel drivers(of L3 and L4 level):
 1. **Abstraction:** struct irq_chip indeed acts as an abstraction layer for the interrupt controllers. It provides a unified interface for the kernel to interact with different interrupt controllers.
@@ -263,5 +262,22 @@ However, it is crucial to understand that despite their distinct roles, **struct
 <br>
 
 ### > L_2.2.2: irq_chip analysis:
+
+Let's go in-depth and understand and visualize irq_chip with some illustrations.
+
+As we discussed above, The IRQ chip manages the hardware control for the interrupt controller driver. Each manufacturer's interrupt controllers handle interrupt lines differently. The IRQ chip in the Linux IRQ core layer abstracts and unifies the management of these different controllers on a line-by-line basis. It offers services such as mask, set, or clear, etc.. for each interrupt line/pin. These operations are handled via callback functions linked to several hook pointers in the irq_chip structure.
+
+If the processing, masking, and set/clear handling of interrupt lines vary, the irq_chip can be configured accordingly. In Kernel, the irq_chip which is responsible for managing each interrupt line is set using a function called **irq_set_chip()**. 
+
+The figure below illustrates how a single interrupt controller's driver manages all the interrupts through one "struct irq_chip":
+![irq_chip-1](https://github.com/user-attachments/assets/deb0d240-0bca-4c5b-b393-d4f5e34fe83a)
+
+<br>
+
+
+
+
+
+
 
   

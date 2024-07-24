@@ -281,7 +281,7 @@ The following figure shows how an interrupt controller's driver manages its cont
 
 ![irq_chip-2](https://github.com/user-attachments/assets/9ea82080-8c65-4951-84b2-f7b4545087d9)
 
-For reference, the bcm2836 interrupt controller handles each interrupt pin with a different irq_chip because each pin's masking must be managed uniquely, making a generic implementation unsuitable in this case:
+For reference, the bcm2836 interrupt controller's driver handles each interrupt pin with a different irq_chip because each pin's masking must be managed uniquely, making a generic implementation unsuitable in this case:
 
 ```
 /drivers/irqchip/irq-bcm2836.c
@@ -308,6 +308,18 @@ static struct irq_chip bcm2836_arm_irqchip_gpu = {
 ```
 
 <br>
+
+The following figure illustrates a controller driver(A) utilizing two separate irq_chip definitions, while another controller's driver(B) employs a single irq_chip definition due to its design requirements:
+
+<br>
+
+![irq_chip-3](https://github.com/user-attachments/assets/7f7fdc9a-5f71-4ede-8644-717c3f20f861)
+
+<br>
+
+So far, we have examined how different "struct irq_chip" structures are defined(in a controller driver) to address the specific requirements of interrupt controllers, with examples from GIC and bcm2836 interrupt controller drivers. Furthermore, it is important to understand how an instance(or a pointer) of struct irq_chip is linked to a particular interrupt pin's irq_desc as [depicted here](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) (note: each interrupt pin in the controllers has a unique irq_desc in the kernel).
+
+
 
 
 

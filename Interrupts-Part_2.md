@@ -276,7 +276,38 @@ The figure below illustrates how a single interrupt controller's driver manages 
 
 <br>
 
+The following figure shows how an interrupt controller's driver manages its controller's interrupt pins by assigning them to different irq_chips, each handling specific hardware control functions:
+<br>
 
+![irq_chip-2](https://github.com/user-attachments/assets/9ea82080-8c65-4951-84b2-f7b4545087d9)
+
+For reference, the bcm2836 interrupt controller handles each interrupt pin with a different irq_chip because each pin's masking must be managed uniquely, making a generic implementation unsuitable in this case:
+
+```
+/drivers/irqchip/irq-bcm2836.c
+...
+...
+static struct irq_chip bcm2836_arm_irqchip_timer = {
+        .name           = "bcm2836-timer",
+        .irq_mask       = bcm2836_arm_irqchip_mask_timer_irq,
+        .irq_unmask     = bcm2836_arm_irqchip_unmask_timer_irq,
+};
+...
+static struct irq_chip bcm2836_arm_irqchip_pmu = {
+	.name		= "bcm2836-pmu",
+	.irq_mask	= bcm2836_arm_irqchip_mask_pmu_irq,
+	.irq_unmask	= bcm2836_arm_irqchip_unmask_pmu_irq,
+};
+...
+static struct irq_chip bcm2836_arm_irqchip_gpu = {
+	.name		= "bcm2836-gpu",
+	.irq_mask	= bcm2836_arm_irqchip_mask_gpu_irq,
+	.irq_unmask	= bcm2836_arm_irqchip_unmask_gpu_irq,
+};
+...
+```
+
+<br>
 
 
 

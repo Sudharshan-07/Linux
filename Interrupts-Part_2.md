@@ -522,18 +522,31 @@ In irq_set_chip(), if sparse IRQ(CONFIG_SPARSE_IRQ) is not used, we mark the cor
 
 ### > L_2.2.3: irq_domain analysis
 
-Why are IRQ Domains (interrupt domains) necessary in the Linux kernel, and what are their significances at the L2, L3, and L4 levels?.
+Why are IRQ Domains (interrupt domains) necessary in the Linux kernel?
 
-In the past, the Linux kernel used a single large number space to assign unique IRQ numbers directly corresponding to interrupt pins, suitable for systems with one interrupt controller. 
+In the early systems, there was only one interrupt controller, and the interrupt numbers were all different so hw irq pin 5 corresponds to sw irq 5 which driver can use and handle the interrupt, here is a simple single interrupt controller block diagram:
 
 ![interrupt_domain_example_1](https://github.com/user-attachments/assets/8152a9f2-898c-4c34-8e11-eaf0945f963b)
 
 <br>
 
-However, this approach becomes challenging in SoCs with multiple interrupt controllers, as the kernel must ensure that each one gets assigned non-overlapping allocations of Linux
-IRQ numbers. With the increasing use of multiple interrupt controllers—such as GPIO controllers—the management of IRQ numbers has become more complex. Each controller requires a distinct(unique and non-overlapping) range of IRQ numbers in the kernel. 
+If there are multiple interrupt controllers in an SoC, assuming that each of them contains 16 IRQ pins, and these 16 IRQs are numbered from 0 to 15, later when the CPU receives an interrupt, the software cannot tell from which interrupt controller the interrupt was sent based on the interrupt number alone. What it needs is the interrupt controller's identity plus the IRQ number. so how to provide this identity for a controller?.
 
-In older kernels, software IRQ numbers directly matched hardware IRQ lines if an SoC had only one interrupt controller(as depicted above). For instance, for an interrupt pin 5(of a controller), the software IRQ number would also be 5. In modern kernels, IRQ numbers are abstract identifiers, so IRQ number 5 could represent any interrupt from any controller, not directly tied to a specific interrupt pin.  For this reason, we need a mechanism to separate controller-local interrupt numbers, called hardware IRQs, from Linux IRQs ( or virtual IRQs/Software IRQs).
+In the early systems, there was only one interrupt controller, and the interrupt numbers were all different. As SoCs became more advanced, more interrupt controllers were added. Even devices like GPIO (general-purpose input/output) can act as an interrupt controller. Each of these controllers has its own set of interrupt lines, and sometimes the physical interrupt numbers are the same across different controllers(overlapping interrupt numbers).
+
+To deal with this, the Linux Kernel developed the concept of the IRQ Domain. An IRQ Domain is a way to manage all the interrupt controllers and their interrupt lines. Each controller has its own corresponding IRQ Domain. This allows the system to keep track of the interrupt numbers, even if they are repeated across different controllers.
+
+*For example, IRQ Controller 1 and its interrupt lines make up one IRQ Domain, while IRQ Controller 2 and its interrupt lines make up a separate IRQ Domain. This way, the system can properly identify and handle the interrupts from each controller, even if they use the same physical interrupt numbers.* Refer to the below picture to visualize a basic multiple-interrupt controllers:
+
+![hierarchial-interrupt-controller](https://github.com/user-attachments/assets/b49ef402-4519-4403-b98c-3e3d63aacc19)
+
+<br>
+
+Typically, Device driver engineers are primarily concerned with obtaining an IRQ number, regardless of the specific hardware interrupt number associated with a particular interrupt controller. Consequently, the kernel's interrupt subsystem must provide a mechanism to **map** the hardware interrupt number to the corresponding Linux IRQ number(or virtual irq number/virq).
+
+From the kernel's perspective, any interrupt from an external device is an asynchronous event that the kernel must identify. The kernel utilizes a VIRQ number to recognize an interrupt request from a device using the hw-irq to sw-irq(virq) mapping mechanism of irq_domain. With the VIRQ number, the kernel can locate the descriptor of the interrupt (struct irq_desc) and call the interrupt handler routine to handle the device. As different software modules employ distinct IDs to identify the interrupt source, a mapping process is necessary. To accomplish this mapping of the hardware interrupt number to the Linux IRQ number, a translation object, known as the irq domain was introduced.
+
+
 
 IRQ domains have the following characteristics:
 - Each hwirq is unique within its domain.
@@ -549,7 +562,13 @@ Assume we have two interrupt controllers in the SoC(interrupt controllers A & B)
 
 <br>
 
+Conceptually, each interrupt controller has a corresponding interrupt domain(irq_domain) defined in the interrupt controller driver. An interrupt controller driver creates and registers an irq_domain by calling one of the irq_domain_add_*() functions (each mapping method has a different allocator function, more on that later).  The function will return a pointer to the irq_domain on success.  The caller must provide the allocator function with an irq_domain_ops structure.
 
+In most cases, the irq_domain will begin empty without any mappings between hwirq and IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist then it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup.
+
+When an interrupt is received, the irq_find_mapping() function should be used to find the Linux IRQ number from the hwirq number.
+
+The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), lest the descriptor will not be allocated.
 
 
 

@@ -553,12 +553,16 @@ Assume we have two interrupt controllers in the SoC(interrupt controllers A & B)
 
 
 
+
+
 #### How does the kernel do the mapping process?
 The IRQ Domain framework has two primary responsibilities:
 1. Mapping HW IRQs to SW IRQs(Virqs/Linux IRQs). (using .map)
 2. Translate hardware IRQ numbers read from the Device Trees(or ACPI) into software IRQ numbers used by the Linux kernel.(using .xlate)
 
 The functionalities for these two operations should be defined in the **[struct irq_domain_ops](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L82)** of the interrupt domain of the interrupt controller driver.
+
+
 
 
 

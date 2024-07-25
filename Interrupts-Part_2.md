@@ -546,14 +546,11 @@ Typically, Device driver engineers are primarily concerned with obtaining an IRQ
 
 From the kernel's perspective, any interrupt from an external device is an asynchronous event that the kernel must identify. The kernel utilizes a VIRQ number to recognize an interrupt request from a device using the hw-irq to sw-irq(virq) mapping mechanism of irq_domain. With the VIRQ number, the kernel can locate the descriptor of the interrupt (struct irq_desc) and call the interrupt handler routine to handle the device. As different software modules employ distinct IDs to identify the interrupt source, a mapping process is necessary. To accomplish this mapping of the hardware interrupt number to the Linux IRQ number, a translation object, known as the irq domain was introduced.
 
-
-
 IRQ domains have the following characteristics:
 - Each hwirq is unique within its domain.
 - They utilize reverse mapping for implementation. *(i.e. reverse mapping (hwirq -> Linux irq) instead of forward mapping (Linux irq -> hwirq))*.
 
-Assume we have two interrupt controllers in the SoC(interrupt controllers A & B), then each will have its own irq_domain as depicted below. The following figure illustrates the process of finding the irq_desc(interrupt descriptor) using hwirq number when an interrupt occurs and invoking the associated handler function:
-
+The following figure illustrates the process of finding the irq_desc(interrupt descriptor) using hwirq number when an interrupt occurs and invoking the associated handler function:
 
 ![irq_domain-mapping](https://github.com/user-attachments/assets/6055cbac-06d1-4d9c-92ca-ec3747006bd4)
 
@@ -562,13 +559,64 @@ Assume we have two interrupt controllers in the SoC(interrupt controllers A & B)
 
 <br>
 
+#### Registering an IRQ Domain for an Interrupt Controller:
 Conceptually, each interrupt controller has a corresponding interrupt domain(irq_domain) defined in the interrupt controller driver. An interrupt controller driver creates and registers an irq_domain by calling one of the irq_domain_add_*() functions (each mapping method has a different allocator function, more on that later).  The function will return a pointer to the irq_domain on success.  The caller must provide the allocator function with an irq_domain_ops structure.
 
-In most cases, the irq_domain will begin empty without any mappings between hwirq and IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist then it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup.
+In most cases, the irq_domain will begin empty without any mappings between hwirq and Linux IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist then it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup. The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), else the descriptor will not be allocated.
 
 When an interrupt is received, the irq_find_mapping() function should be used to find the Linux IRQ number from the hwirq number.
 
-The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), lest the descriptor will not be allocated.
+### Domain creation methods:
+To implement domains of various characteristics, there are several domain creation methods:
+
+##### How to allocate reverse maps
+**Linear:**
+- Contiguous allocation mapping space
+-  Advantage: Simple to implement, as creating a linear mapping array at boot time does not cause a large memory burden, as long as hwirq uses numbers less than a few hundred.
+
+**Tree:**
+- Dynamic allocation space using Radix Tree
+- Advantage: When the hwirq number is very large, it is used to avoid wasting memory by dynamically configuring allocation only for the hwirq that is needed.
+
+**No-Map:**
+- No space is required for mapping (automatic mapping with the same number)
+
+#### How to implement mapping
+We provide functions starting with “irq_domain_add_” for several implementation models:
+
+**Linear**
+- It only creates a linear mapping space of the requested size and does not connect the mappings.
+- Later, irq descriptors are created using mapping APIs, etc., and mapped to hwirq for use.
+- irq_domain_add_linear() function.
+
+**Tree**
+- Initializes and uses Radix Tree without size restrictions. Mapping space and mapping connections are not performed.
+- Later, irq descriptors are created using mapping APIs, etc., and mapped to hwirq for use.
+- irq_domain_add_tree().
+
+**Nomap**
+- Used in systems where irq and hwirq are always the same, so no mapping is needed.
+- We don't create linear mapping tables, nor do we use Radix Trees.
+- Before adding an irq domain, the irq descriptors must be pre-configured.
+- irq_domain_add_nomap() function.
+
+**Legacy**
+- Create a linear mapping space of the size of the request size + first_irq, and automatically use the fixed mapping starting from the first_hw_irq mapping number and the first_irq number.
+- Before adding an irq domain in legacy fashion, irq descriptors must be pre-allocated.
+- irq_domain_add_legacy().
+
+**Legacy ISA**
+- Same as Legacy, but automatically operates as size = 16, first_irq = 0, first_hw_irq = 0. (The number of irqs is limited to 16)
+- irq_domain_add_legacy_isa() function.
+
+**Simple**
+ - Create a linear mapping space of the requested size, create irq descriptors starting from hwirq=0 and irq= first_irq, connect them, and use them in a fixed order.
+- irq_domain_add_simple() function
+
+The following figure provides a visual view of how to create different types of domains:
+![irq_domain_map_methods](https://github.com/user-attachments/assets/c7c5ead4-c43b-4741-ae72-7c42fbc42be8)
+
+<br>
 
 
 

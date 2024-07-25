@@ -522,7 +522,7 @@ In irq_set_chip(), if sparse IRQ(CONFIG_SPARSE_IRQ) is not used, we mark the cor
 
 ### > L_2.2.3: irq_domain analysis
 
-Why is an irq_domain (interrupt domain) necessary in the Linux kernel, and what is its significance at the L2, L3, and L4 levels?.
+Why are IRQ Domains (interrupt domains) necessary in the Linux kernel, and what are their significances at the L2, L3, and L4 levels?.
 
 In the past, the Linux kernel used a single large number space to assign unique IRQ numbers directly corresponding to interrupt pins, suitable for systems with one interrupt controller. 
 

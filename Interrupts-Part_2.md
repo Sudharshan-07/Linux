@@ -374,7 +374,7 @@ force);
 ```
 
 
-As we discussed above, The IRQ chip manages the hardware control for the interrupt controller driver. Each manufacturer's interrupt controllers handle interrupt lines differently. The IRQ chip in the Linux IRQ core layer abstracts and unifies the management of these different controllers on an interrupt pin-by-pin basis. It offers services such as mask, set, or clear, etc.. for each interrupt line/pin. These operations are handled via callback functions linked to several hook pointers in the irq_chip structure.
+As discussed above, The IRQ chip manages the hardware control for the interrupt controller driver. Each manufacturer's interrupt controllers handle interrupt lines differently. The IRQ chip in the Linux IRQ core layer abstracts and unifies the management of these different controllers on an interrupt pin-by-pin basis. It offers services such as mask, set, clear, etc.. for each interrupt line/pin. These operations are handled via callback functions linked to several hook pointers in the irq_chip structure.
 
 If the processing, masking, setting, and clearing of interrupt lines vary, the irq_chip can be configured accordingly. In Kernel, the irq_chip which is responsible for managing each interrupt line is set using a function called **irq_set_chip()**. 
 

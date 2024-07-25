@@ -542,7 +542,8 @@ IRQ domains have the following characteristics:
 Assume we have two interrupt controllers in the SoC(interrupt controllers A & B), then each will have its own irq_domain as depicted below. The following figure illustrates the process of finding the irq_desc(interrupt descriptor) using hwirq number when an interrupt occurs and invoking the associated handler function:
 
 
-![irq_domain-mapping](https://github.com/user-attachments/assets/2771b0d7-6491-4dd7-b120-7b4d723d2250)
+![irq_domain-mapping](https://github.com/user-attachments/assets/6055cbac-06d1-4d9c-92ca-ec3747006bd4)
+
 
 ###### Note: This is just a visualization to help understand the underlying concept better. In reality, the creation of interrupt domains follows the hierarchy of interrupt controllers connected in the SoC, which we will analyze further.
 

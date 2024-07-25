@@ -535,9 +535,35 @@ IRQ numbers. With the increasing use of multiple interrupt controllers—such as
 
 In older kernels, software IRQ numbers directly matched hardware IRQ lines if an SoC had only one interrupt controller(as depicted above). For instance, for an interrupt pin 5(of a controller), the software IRQ number would also be 5. In modern kernels, IRQ numbers are abstract identifiers, so IRQ number 5 could represent any interrupt from any controller, not directly tied to a specific interrupt pin.  For this reason, we need a mechanism to separate controller-local interrupt numbers, called hardware IRQs, from Linux IRQs ( or virtual IRQs/Software IRQs).
 
-IRQ Domain framework's main responsiblity is to do two things:
-1. mapping hw irqs to a sw irq.
-2. trans
+IRQ domains have the following characteristics:
+- Each hwirq is unique within its domain.
+- They utilize reverse mapping for implementation. *(i.e. reverse mapping (hwirq -> Linux irq) instead of forward mapping (Linux irq -> hwirq))*.
+
+Assume we have two interrupt controllers in the SoC(interrupt controllers A & B), then each will have its own irq_domain as depicted below. The following figure illustrates the process of finding the irq_desc(interrupt descriptor) using hwirq number when an interrupt occurs and invoking the associated handler function:
+
+
+![irq_domain-mapping](https://github.com/user-attachments/assets/2771b0d7-6491-4dd7-b120-7b4d723d2250)
+
+###### Note: this is just for visualization to understand the underlying concept better. but in real the interrupt domain creation will follow the hierarchy of interrupt controllers connected in the SoC which we will analyze further.
+
+<br>
+
+
+
+
+
+#### How does the kernel do the mapping process?
+The IRQ Domain framework has two primary responsibilities:
+1. Mapping HW IRQs to SW IRQs(Virqs/Linux IRQs). (using .map)
+2. Translate hardware IRQ numbers read from the Device Trees(or ACPI) into software IRQ numbers used by the Linux kernel.(using .xlate)
+
+The functionalities for these two operations should be defined in the **[struct irq_domain_ops](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L82)** of the interrupt domain of the interrupt controller driver.
+
+
+
+
+
+
 
 
 

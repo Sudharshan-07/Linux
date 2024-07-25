@@ -544,7 +544,7 @@ Assume we have two interrupt controllers in the SoC(interrupt controllers A & B)
 
 ![irq_domain-mapping](https://github.com/user-attachments/assets/2771b0d7-6491-4dd7-b120-7b4d723d2250)
 
-###### Note: this is just for visualization to understand the underlying concept better. but in real the interrupt domain creation will follow the hierarchy of interrupt controllers connected in the SoC which we will analyze further.
+###### Note: This is just a visualization to help understand the underlying concept better. In reality, the creation of interrupt domains follows the hierarchy of interrupt controllers connected in the SoC, which we will analyze further.
 
 <br>
 

@@ -594,7 +594,7 @@ We provide functions starting with “irq_domain_add_” for several implementat
 - Later, irq descriptors are created using mapping APIs, etc., and mapped to hwirq for use.
 - irq_domain_add_tree().
 
-**Nomap**
+**No-map**
 - Used in systems where irq and hwirq are always the same, so no mapping is needed.
 - We don't create linear mapping tables, nor do we use Radix Trees.
 - Before adding an irq domain, the irq descriptors must be pre-configured.
@@ -618,7 +618,18 @@ The following figure provides a visual view of how to create different types of 
 
 <br>
 
+The following figure illustrates the data structure used for mapping, the creation of IRQ descriptors, and whether mapping is performed, based on the domain mapping implementation model:
 
+![irq_domain_5](https://github.com/user-attachments/assets/f98b497f-e15a-4dd1-81af-ff326d20fd8d)
+
+<br>
+
+
+The following figure shows an example of configuring irq_domain by combining three methods: no-map, linear, and tree, each corresponding to three interrupt controllers:
+
+![irq_domain_6](https://github.com/user-attachments/assets/6ff04806-27d5-48c9-acd7-a85416d8ad21)
+
+<br>
 
 
 

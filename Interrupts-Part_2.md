@@ -627,7 +627,7 @@ The following figure illustrates the data structure used for mapping, the creati
 
 The following figure shows an example of configuring irq_domain by combining three methods: no-map, linear, and tree, each corresponding to three interrupt controllers:
 
-![irq_domain_6](https://github.com/user-attachments/assets/6ff04806-27d5-48c9-acd7-a85416d8ad21)
+![irq_domain_6](https://github.com/user-attachments/assets/a2455cc3-cea6-467c-9337-c36ba7765104)
 
 <br>
 

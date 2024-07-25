@@ -188,7 +188,8 @@ The **struct irq_domain** structure maps Hardware IRQ numbers to Linux/Software 
 
 If we closely examined this [section](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#interrupt-controller-abstraction-from-kernel-viewpoint) in [Interrupts-part_1](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_1.md#-interrupts--), we observed that there are six main IRQ data structures interconnected within the kernel's IRQ subsystem. The question arises: why does the GIC's private data structure only include **struct irq_chip** and **struct irq_domain**, and not the other IRQ data structures such as **irq_desc, irq_data, and irqaction**? Why can't these additional structures be included as well?. Before delving into an in-depth analysis of the irq_chip and irq_domain use cases, let's briefly discuss this topic now.
 
-[struct irq_chip](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irq.h#L340) provides three main advantages to the kernel drivers(of L3 and L4 level):
+##### What is the need for irq_chip ?
+**[struct irq_chip](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irq.h#L340)** provides three main advantages to the kernel drivers(of L3 and L4 level):
 1. **Abstraction:** struct irq_chip indeed acts as an abstraction layer for the interrupt controllers. It provides a unified interface for the kernel to interact with different interrupt controllers.
 
 2. **Standardized Interface:** By using struct irq_chip, the kernel can handle interrupt pins in a standardized manner. This abstraction allows the kernel to interact with different interrupt pins consistently.
@@ -236,7 +237,7 @@ static void gic_init_chip(struct gic_chip_data *gic, struct device *dev,
 
 ```
 
-[struct irq_domain](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L125), provides a way to map and manage the hierarchy and translation of interrupts numbers between the hardware IRQ to Software/Linux irq numbers.
+**[struct irq_domain](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L125)**, provides a way to map and manage the hierarchy and translation of interrupts numbers between the hardware IRQ to Software/Linux irq numbers.
 
 ```
 /drivers/irqchip/irq-gic.c
@@ -516,6 +517,39 @@ In irq_set_chip(), if sparse IRQ(CONFIG_SPARSE_IRQ) is not used, we mark the cor
 ```
 
 ![irq_mark_irq-1a](https://github.com/user-attachments/assets/ddad499f-3141-44ac-b625-c1cb9f4d7c57)
+
+<br>
+
+### > L_2.2.3: irq_domain analysis
+
+Why is an irq_domain (interrupt domain) necessary in the Linux kernel, and what is its significance at the L2, L3, and L4 levels?.
+
+In the past, the Linux kernel used a single large number space to assign unique IRQ numbers directly corresponding to interrupt pins, suitable for systems with one interrupt controller. 
+
+![interrupt_domain_example_1](https://github.com/user-attachments/assets/8152a9f2-898c-4c34-8e11-eaf0945f963b)
+
+<br>
+
+However, this approach becomes challenging in SoCs with multiple interrupt controllers, as the kernel must ensure that each one gets assigned non-overlapping allocations of Linux
+IRQ numbers. With the increasing use of multiple interrupt controllers—such as GPIO controllers—the management of IRQ numbers has become more complex. Each controller requires a distinct(unique and non-overlapping) range of IRQ numbers in the kernel. 
+
+In older kernels, software IRQ numbers directly matched hardware IRQ lines if an SoC had only one interrupt controller(as depicted above). For instance, for an interrupt pin 5(of a controller), the software IRQ number would also be 5. In modern kernels, IRQ numbers are abstract identifiers, so IRQ number 5 could represent any interrupt from any controller, not directly tied to a specific interrupt pin.  For this reason, we need a mechanism to separate controller-local interrupt numbers, called hardware IRQs, from Linux IRQs ( or virtual IRQs/Software IRQs).
+
+IRQ Domain framework's main responsiblity is to do two things:
+1. mapping hw irqs to a sw irq.
+2. trans
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

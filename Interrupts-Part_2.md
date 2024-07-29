@@ -808,7 +808,7 @@ Refer to the below call flow for a complete understanding of the interrupt subsy
 <br>
 
 **References:**
-https://www.cnblogs.com/LoyenWang/p/12996812.html
+https://www.cnblogs.com/LoyenWang/p/12996812.html <br>
 http://jake.dothome.co.kr/interrupts-2/
 
 

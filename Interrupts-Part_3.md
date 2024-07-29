@@ -14,6 +14,20 @@ Let's start by examining the overall IRQ data structure, with the core centered 
 
 ![IRQ-DS-flow](https://github.com/user-attachments/assets/1a59f320-1f0a-4463-ad0c-3466a1fd342e)
 
+<br>
+
+The Linux kernel's interrupt processing revolves around the interrupt descriptor structure **struct irq_desc**. The kernel offers two ways to organize these interrupt descriptors:
+
+#### Sparse IRQ:
+- If the kernel config option **CONFIG_SPARSE_IRQ** is enabled, dynamically allocate struct irq_desc structures for required IRQ numbers and manage them using Radix Tree.
+- arm64 based systems enables the CONFIG_SPARSE_IRQ kernel config by default.
+- Functions used to create/destroy an irq descriptor:
+  - irq_alloc_desc*()
+  - irq_free_desc*()
+
+#### Flat IRQ:
+- If you do not use kernel options, an array of irq_dest structures equal to the max IRQ number is statically allocated and used at compile time.
+
 
 
 

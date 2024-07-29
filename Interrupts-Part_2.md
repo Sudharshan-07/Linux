@@ -560,9 +560,9 @@ The following figure illustrates the process of finding the irq_desc(interrupt d
 <br>
 
 #### Registering an IRQ Domain for an Interrupt Controller:
-Conceptually, each interrupt controller has a corresponding interrupt domain(irq_domain) defined in the interrupt controller driver. An interrupt controller driver creates and registers an irq_domain by calling one of the irq_domain_add_*() functions (each mapping method has a different allocator function, more on that later).  The function will return a pointer to the irq_domain on success.  The caller must provide the allocator function with an irq_domain_ops structure.
+Conceptually, each interrupt controller has a corresponding interrupt domain(irq_domain) defined in the interrupt controller driver. An interrupt controller driver creates and registers an irq_domain by calling one of the irq_domain_add_*() functions (each mapping method has a different allocator function, more later on).  The function will return a pointer to the irq_domain on success.  The caller must provide the allocator function with an irq_domain_ops structure.
 
-In most cases, the irq_domain will begin empty without any mappings between hwirq and Linux IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist then it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup. The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), else the descriptor will not be allocated.
+In most cases, the irq_domain will begin empty without any mappings between hwirq and Linux IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist, it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup. The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), else the descriptor will not be allocated.
 
 When an interrupt is received, the irq_find_mapping() function should be used to find the Linux IRQ number from the hwirq number.
 
@@ -576,40 +576,40 @@ To implement domains of various characteristics, there are several domain creati
 
 **Tree:**
 - Dynamic allocation space using Radix Tree
-- Advantage: When the hwirq number is very large, it is used to avoid wasting memory by dynamically configuring allocation only for the hwirq that is needed.
+- Advantage: When the hwirq number is huge, it is used to avoid wasting memory by dynamically configuring allocation only for the hwirq that is needed.
 
 **No-Map:**
 - No space is required for mapping (automatic mapping with the same number)
 
-#### How to implement mapping
-We provide functions starting with “irq_domain_add_” for several implementation models:
+#### How is the above-mentioned mapping implemented?
+The Linux kernel offers several implementation methods with functions starting with **"irq_domain_add_*()"**:
 
-**Linear**
+**Linear:**
 - It only creates a linear mapping space of the requested size and does not connect the mappings.
 - Later, irq descriptors are created using mapping APIs, etc., and mapped to hwirq for use.
 - irq_domain_add_linear() function.
 
-**Tree**
+**Tree:**
 - Initializes and uses Radix Tree without size restrictions. Mapping space and mapping connections are not performed.
 - Later, irq descriptors are created using mapping APIs, etc., and mapped to hwirq for use.
 - irq_domain_add_tree().
 
-**No-map**
+**No-Map"**
 - Used in systems where irq and hwirq are always the same, so no mapping is needed.
 - We don't create linear mapping tables, nor do we use Radix Trees.
 - Before adding an irq domain, the irq descriptors must be pre-configured.
 - irq_domain_add_nomap() function.
 
-**Legacy**
+**Legacy:**
 - Create a linear mapping space of the size of the request size + first_irq, and automatically use the fixed mapping starting from the first_hw_irq mapping number and the first_irq number.
 - Before adding an irq domain in legacy fashion, irq descriptors must be pre-allocated.
 - irq_domain_add_legacy().
 
-**Legacy ISA**
+**Legacy ISA:**
 - Same as Legacy, but automatically operates as size = 16, first_irq = 0, first_hw_irq = 0. (The number of irqs is limited to 16)
 - irq_domain_add_legacy_isa() function.
 
-**Simple**
+**Simple:**
  - Create a linear mapping space of the requested size, create irq descriptors starting from hwirq=0 and irq= first_irq, connect them, and use them in a fixed order.
 - irq_domain_add_simple() function
 
@@ -630,6 +630,26 @@ The following figure shows an example of configuring irq_domain by combining thr
 ![irq_domain_6](https://github.com/user-attachments/assets/a2455cc3-cea6-467c-9337-c36ba7765104)
 
 <br>
+
+#### How hw irq to sw irq mapping is created and associated to an irq_desc?
+
+The following figure illustrates the process of creating a mapping to a hardware interrupt(hwirq) by allocating an interrupt descriptor:
+
+![irq_create_mapping-1](https://github.com/user-attachments/assets/ccffbaee-a62a-4c1a-baa8-a1999a5e3f5b)
+
+<br>
+
+likewise, there are other mapping functions available such as irq_create_of_mapping, irq_create_fwspec_mapping, irq_create_identity_mapping, irq_create_strict_mappings, irq_create_direct_mapping.
+
+#### How to search for a mapping?
+
+The following figure illustrates the three different approaches taken by the irq_find_mapping() function to find the IRQ number mapped to the hwirq based on the mapping type:
+
+![irq-find-mapping](https://github.com/user-attachments/assets/380e3f84-56af-4d88-b9bf-9b06379825b8)
+
+<br>
+
+
 
 
 

@@ -783,6 +783,7 @@ When executing the "gic_handle_irq" handler on an ARM-based platform, there are 
 - An interrupt triggered by a peripheral, with a hardware interrupt number ranging from 32 to 1019.
 - A software-triggered interrupt used for inter-processor communication, with a hardware interrupt number within the range of 0 to 15.
 
+Below are the call flow steps:
 1. The "gic_handle_irq" function first obtains the hardware interrupt number, which refers to the main interrupt number:
 2. Then execute __handle_domain_irq:<br>
 	2.1: Call irq_find_mapping to get the Linux IRQ number for the hardware interrupt number and the interrupt domain irq_domain corresponding to the main interrupt controller.<br>

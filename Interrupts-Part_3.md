@@ -12,7 +12,7 @@ In [Interrupts-Part_2](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-
 ### IRQ Data Structure Links Analysis:
 Let's start by examining the overall IRQ data structure, with the core centered around **struct irq_desc:**
 
-![IRQ-DS-flow](https://github.com/user-attachments/assets/1a59f320-1f0a-4463-ad0c-3466a1fd342e)
+![IRQ-DS-flow](https://github.com/user-attachments/assets/ea6ec013-11f6-434c-b1d8-b3928dc85b49)
 
 <br>
 
@@ -27,6 +27,12 @@ The Linux kernel's interrupt processing revolves around the interrupt descriptor
 
 #### Flat IRQ:
 - If you do not use kernel options, an array of irq_dest structures equal to the max IRQ number is statically allocated and used at compile time.
+
+Regardless of the above ways, the corresponding interrupt descriptor in Linux can ultimately be found using the Linux IRQ number.
+
+
+
+
 
 
 

@@ -564,7 +564,66 @@ Conceptually, each interrupt controller has a corresponding interrupt domain(irq
 
 In most cases, the irq_domain will begin empty without any mappings between hwirq and Linux IRQ numbers.  Mappings are added to the irq_domain by calling irq_create_mapping() which accepts the irq_domain and a hwirq number as arguments.  If a mapping for the hwirq doesn't already exist, it will allocate a new Linux irq_desc, associate it with the hwirq, and call the .map() callback so the driver can perform any required hardware setup. The irq_create_mapping() function must be called **at least once** before any call to irq_find_mapping(), else the descriptor will not be allocated.
 
-When an interrupt is received, the irq_find_mapping() function should be used to find the Linux IRQ number from the hwirq number.
+When an interrupt is received, the **irq_find_mapping()** function should be used to find the Linux IRQ number from the hwirq number.
+
+Below is the irq_domain structure declaration:
+
+```
+/**
+ * struct irq_domain - Hardware interrupt number translation object
+ * @link: Element in global irq_domain list.
+ * @name: Name of interrupt domain
+ * @ops: pointer to irq_domain methods
+ * @host_data: private data pointer for use by owner.  Not touched by irq_domain
+ *             core code.
+ * @flags: host per irq_domain flags
+ * @mapcount: The number of mapped interrupts
+ *
+ * Optional elements
+ * @fwnode: Pointer to firmware node associated with the irq_domain. Pretty easy
+ *          to swap it for the of_node via the irq_domain_get_of_node accessor
+ * @gc: Pointer to a list of generic chips. There is a helper function for
+ *      setting up one or more generic chips for interrupt controllers
+ *      drivers using the generic chip library which uses this pointer.
+ * @parent: Pointer to parent irq_domain to support hierarchy irq_domains
+ * @debugfs_file: dentry for the domain debugfs file
+ *
+ * Revmap data, used internally by irq_domain
+ * @revmap_direct_max_irq: The largest hwirq that can be set for controllers that
+ *                         support direct mapping
+ * @revmap_size: Size of the linear map table @linear_revmap[]
+ * @revmap_tree: Radix map tree for hwirqs that don't fit in the linear map
+ * @linear_revmap: Linear table of hwirq->virq reverse mappings
+ */
+
+struct irq_domain {
+        struct list_head link;
+        const char *name;
+        const struct irq_domain_ops *ops;
+        void *host_data;
+        unsigned int flags;
+        unsigned int mapcount;
+
+        /* Optional data */
+        struct fwnode_handle *fwnode;
+        enum irq_domain_bus_token bus_token;
+        struct irq_domain_chip_generic *gc;
+#ifdef  CONFIG_IRQ_DOMAIN_HIERARCHY
+        struct irq_domain *parent;
+#endif
+#ifdef CONFIG_GENERIC_IRQ_DEBUGFS
+        struct dentry           *debugfs_file;
+#endif
+
+        /* reverse map data. The linear map gets appended to the irq_domain */
+        irq_hw_number_t hwirq_max;
+        unsigned int revmap_direct_max_irq;
+        unsigned int revmap_size;
+        struct radix_tree_root revmap_tree;
+        struct mutex revmap_tree_mutex;
+        unsigned int linear_revmap[];
+};
+```
 
 ### Domain creation methods:
 To implement domains of various characteristics, there are several domain creation methods:
@@ -631,7 +690,12 @@ The following figure shows an example of configuring irq_domain by combining thr
 
 <br>
 
-#### How hw irq to sw irq mapping is created and associated to an irq_desc?
+#### How does the kernel do the mapping process (or) How hw irq to sw irq mapping is created and associated to an irq_desc?
+The IRQ Domain framework has two primary responsibilities:
+1. Mapping HW IRQs to SW IRQs(Virqs/Linux IRQs). (using .map)
+2. Translate hardware IRQ numbers read from the Device Trees(or ACPI) into software IRQ numbers used by the Linux kernel.(using .xlate)
+
+The functionalities for these two operations should be defined in the **[struct irq_domain_ops](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L82)** of the interrupt domain of the interrupt controller driver.
 
 The following figure illustrates the process of creating a mapping to a hardware interrupt(hwirq) by allocating an interrupt descriptor:
 
@@ -639,26 +703,24 @@ The following figure illustrates the process of creating a mapping to a hardware
 
 <br>
 
-likewise, there are other mapping functions available such as irq_create_of_mapping, irq_create_fwspec_mapping, irq_create_identity_mapping, irq_create_strict_mappings, irq_create_direct_mapping.
+likewise, there are other mapping functions available such as **irq_create_of_mapping, irq_create_fwspec_mapping, irq_create_identity_mapping, irq_create_strict_mappings,and irq_create_direct_mapping.**
 
-#### How to search for a mapping?
+The below figure illustrates what functionally each function does:
 
-The following figure illustrates the three different approaches taken by the irq_find_mapping() function to find the IRQ number mapped to the hwirq based on the mapping type:
-
-![irq-find-mapping](https://github.com/user-attachments/assets/380e3f84-56af-4d88-b9bf-9b06379825b8)
+![irq_domain-5d](https://github.com/user-attachments/assets/8da0ed18-5a82-44f5-8ead-2b0a59d12edb)
 
 <br>
 
 
 
+#### How to search for a mapping when we receive an interrupt?
 
+The following figure illustrates the three different approaches taken by the **irq_find_mapping()** function to find the IRQ number mapped to the hwirq based on the mapping type:
 
-#### How does the kernel do the mapping process?
-The IRQ Domain framework has two primary responsibilities:
-1. Mapping HW IRQs to SW IRQs(Virqs/Linux IRQs). (using .map)
-2. Translate hardware IRQ numbers read from the Device Trees(or ACPI) into software IRQ numbers used by the Linux kernel.(using .xlate)
+![irq-find-mapping](https://github.com/user-attachments/assets/380e3f84-56af-4d88-b9bf-9b06379825b8)
 
-The functionalities for these two operations should be defined in the **[struct irq_domain_ops](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L82)** of the interrupt domain of the interrupt controller driver.
+<br>
+
 
 
 

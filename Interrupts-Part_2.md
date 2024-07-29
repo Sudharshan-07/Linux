@@ -749,7 +749,7 @@ To support such a hardware topology and make software architecture match hardwar
 
 #### L_2.3: Architecture-Dependent code analysis:
 
-Interrupt is also a kind of exception mode. When the peripheral triggers an interrupt, the processor will switch to a specific exception mode for processing. This part of the code is architecture-related; the ARM64 code is located at arch/arm64/kernel/entry.S. 
+Interrupt is also a kind of exception mode. When the peripheral triggers an interrupt, the processor will switch to a specific exception mode for processing. Taking ARM SoC as an example, this part of the code is architecture-related and the ARM64 code is located at arch/arm64/kernel/entry.S. 
 
 The ARM64 processor has four exception levels: 0~3, EL0 corresponds to user-mode programs, EL1 corresponds to operating system kernel mode, EL2 corresponds to Hypervisor, and EL3 corresponds to Secure Monitor.
 
@@ -770,14 +770,34 @@ The code is relatively simple, as follows:
 	.endm
 
 ```
-Refer the below illustration for the code flow:
+Refer to the below illustration for the code flow:
 
 ![Arch-depent-flow](https://github.com/user-attachments/assets/2d98a82a-d5ec-40e8-86d2-69a71e182501)
 
 <br>
 
+When an interrupt is triggered, the processor switches to the exception vector table to find the corresponding entry. During the GIC driver init, the **set_handle_irq** interface is called to set **handle_arch_irq** the function pointer, so it points to the interrupt **gic_handle_irq**. so when the interrupt is triggered, execution will jump to **gic_handle_irq** which is the GIC's interrupt handler.
 
 
+When executing the "gic_handle_irq" handler on an ARM-based platform, there are two scenarios:
+- An interrupt triggered by a peripheral, with a hardware interrupt number ranging from 32 to 1019.
+- A software-triggered interrupt used for inter-processor communication, with a hardware interrupt number within the range of 0 to 15.
+
+1. The "gic_handle_irq" function first obtains the hardware interrupt number, which refers to the main interrupt number:
+2. Then execute __handle_domain_irq:<br>
+	2.1: Call irq_find_mapping to get the Linux IRQ number for the hardware interrupt number and the interrupt domain irq_domain corresponding to the main interrupt controller.<br>
+	2.2: Calling generic_handle_irq:<br>
+	- 2.2.1: Call irq_to_desc to get the interrupt descriptor according to the IRQ number. <br>
+	- 2.2.2: Call the flow control processing callback handle_irq in the interrupt descriptor. <br>
+ 	- 2.2.3: "handle_irq" uses the functions in the chip structure to mask and unmask the current interrupt and calls the primary handler registered by the user in the action list. At the same time, if the interrupt threading function is registered, it will also wake up the interrupt thread and execute the threaded interrupt handler. <br>
+
+Refer to the below call flow for a complete understanding of the interrupt subsystem:
+
+![irq-complete-flow-control](https://github.com/user-attachments/assets/7a4807a9-91b4-4953-b574-44934733a73e)
+
+<br>  
+
+This concludes the introduction to Architecture-Dependentant and interrupt controller driver(layer 2). 
 
 
 

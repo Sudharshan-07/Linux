@@ -103,6 +103,7 @@ Breaking down the analysis of the L2 layer into two steps:
   - L_2.2.1: GIC's private data structure analysis.
   - L_2.2.2: irq_chip analysis.
   - L_2.2.3: irq_domain analysis.
+- L_2.3: Architecture-Dependent code analysis.
 
 #### > L_2.1: How does the kernel locate information about the interrupt controller?
 
@@ -746,15 +747,34 @@ To support such a hardware topology and make software architecture match hardwar
 	IOAPIC irq_domain (manage IOAPIC delivery entries/pins).
 
 
+#### L_2.3: Architecture-Dependent code analysis:
 
+Interrupt is also a kind of exception mode. When the peripheral triggers an interrupt, the processor will switch to a specific exception mode for processing. This part of the code is architecture-related; the ARM64 code is located at arch/arm64/kernel/entry.S. 
 
+The ARM64 processor has four exception levels: 0~3, EL0 corresponds to user-mode programs, EL1 corresponds to operating system kernel mode, EL2 corresponds to Hypervisor, and EL3 corresponds to Secure Monitor.
 
+When an exception is triggered, the processor switches and jumps to the exception vector table to start execution. For interrupt exceptions, it will eventually jump to irq_handler.
 
+The code is relatively simple, as follows:
 
+```
+/*
+ * Interrupt handling.
+ */
+	.macro	irq_handler
+	ldr_l	x1, handle_arch_irq
+	mov	x0, sp
+	irq_stack_entry
+	blr	x1
+	irq_stack_exit
+	.endm
 
+```
+Refer the below illustration for the code flow:
 
+![Arch-depent-flow](https://github.com/user-attachments/assets/2d98a82a-d5ec-40e8-86d2-69a71e182501)
 
-
+<br>
 
 
 

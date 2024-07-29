@@ -533,9 +533,9 @@ The below figure is an example of a legacy interrupt controller block diagram:
 
 <br>
 
-If there are multiple interrupt controllers in an SoC, assuming that each of them contains 16 IRQ pins, and these 16 IRQs are numbered from 0 to 15, later when the CPU receives an interrupt, the software cannot tell from which interrupt controller the interrupt was sent based on the interrupt number alone. What it needs is the interrupt controller's identity plus the IRQ number. so how to provide this identity for a controller?.
+If there are multiple interrupt controllers in an SoC, assuming that each of them contains 16 IRQ pins, and these 16 IRQs are numbered from 0 to 15, later when the CPU receives an interrupt, the software cannot tell from which interrupt controller the interrupt was sent based on the interrupt number alone. What it needs is the interrupt controller's identity plus the IRQ number. so how to provide an identity for an interrupt controller?.
 
-In the early systems, there was only one interrupt controller, and the interrupt numbers were all different. As SoCs became more advanced, more interrupt controllers were added. Even devices like GPIO (general-purpose input/output) can act as an interrupt controller. Each of these controllers has its own set of interrupt lines, and sometimes the physical interrupt numbers are the same across different controllers(overlapping interrupt numbers).
+In the early systems, there was only one interrupt controller, and the interrupt numbers were all unique. As SoCs became more advanced, more interrupt controllers were added. Even devices like GPIO (general-purpose input/output) can act as an interrupt controller. Each of these controllers has its own set of interrupt lines, and sometimes the physical interrupt numbers are the same across different controllers(overlapping interrupt numbers).
 
 To deal with this, the Linux Kernel developed the concept of the IRQ Domain. An IRQ Domain is a way to manage all the interrupt controllers and their interrupt lines. Each controller has its own corresponding IRQ Domain. This allows the system to keep track of the interrupt numbers, even if they are repeated across different controllers.
 

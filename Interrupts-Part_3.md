@@ -155,9 +155,14 @@ The following figure shows how one irq descriptor is allocated and initialized:
 
 #### Interrupt processing primarily involves the following functional components:
 
-1. Mapping hardware interrupt numbers(hwirq) to Linux IRQ(virq) numbers and setting up the struct irq_desc interrupt descriptor.
-2. During interrupt registration, the device's interrupt number is retrieved, the matching irq_desc is identified, and the device's interrupt handler is linked to the corresponding irq_desc's struct irq_data.
+1. Mapping hardware interrupt numbers(hwirq) to Linux IRQ(virq) numbers and allocating struct irq_desc interrupt descriptor based on above mentioned methods(Flat or Sparse).
+   
+2. During interrupt registration(i.e, while calling request_irq()), the device's interrupt number is retrieved(via DTS or ACPI), the matching irq_desc is identified, and the device's interrupt handler is linked to the corresponding irq_desc's struct irqaction's handler field.
+
 3. When an interrupt is triggered, the L2 Layer determines the IRQ number from the hardware interrupt number, finds the associated irq_desc, and calls the corresponding interrupt handler function.
+
+
+
 
 
 

@@ -736,7 +736,7 @@ There are three interrupt controllers involved:
 2) Interrupt remapping controller
 3) Local APIC controller
 
-To support such a hardware topology and make software architecture match hardware architecture, an irq_domain data structure is built for each interrupt controller, and those irq_domains are organized into a hierarchy. When constructing the irq_domain hierarchy, the irq_domain near the device is a child(here IOAPIC) and the irq_domain near the CPU is the [parent](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L140)(here Local APIC). So a hierarchy structure as below will be built for the example above:
+To support such a hardware topology and make software architecture match hardware architecture, an irq_domain data structure is built for each interrupt controller, and those irq_domains are organized into a hierarchy. When constructing the irq_domain hierarchy, the irq_domain near the device is a child(here IOAPIC) and the irq_domain near the CPU is the [parent](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L140)(here Local APIC). Therefore, a hierarchy of irq_domain structures as below will be created for the example above:
 
 	Local APCI irq_domain (root irq_domain to manage CPU vectors)
 		^

@@ -103,7 +103,7 @@ Breaking down the analysis of the L2 layer into two steps:
   - L_2.2.1: GIC's private data structure analysis.
   - L_2.2.2: irq_chip analysis.
   - L_2.2.3: irq_domain analysis.
-- L_2.3: Architecture-Dependent code analysis.
+- L_2.3: Architecture-Dependent code flow analysis.
 
 #### > L_2.1: How does the kernel locate information about the interrupt controller?
 
@@ -747,7 +747,7 @@ To support such a hardware topology and make software architecture match hardwar
 	IOAPIC irq_domain (manage IOAPIC delivery entries/pins).
 
 
-#### L_2.3: Architecture-Dependent code analysis:
+#### L_2.3: Architecture-Dependent code flow analysis:
 
 Interrupt is also a kind of exception mode. When the peripheral triggers an interrupt, the processor will switch to a specific exception mode for processing. Taking ARM SoC as an example, this part of the code is architecture-related and the ARM64 code is located at arch/arm64/kernel/entry.S. 
 
@@ -793,7 +793,9 @@ When executing the "gic_handle_irq" handler on an ARM-based platform, there are 
 
 Refer to the below call flow for a complete understanding of the interrupt subsystem:
 
-![irq-complete-flow-control](https://github.com/user-attachments/assets/7a4807a9-91b4-4953-b574-44934733a73e)
+
+![irq-complete-flow-control](https://github.com/user-attachments/assets/7a4807a9-91b4-4953-b574-44934733a73e) 
+
 
 <br>  
 

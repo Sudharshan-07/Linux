@@ -17,6 +17,9 @@ Let's start by examining the overall IRQ data structure, with the core centered 
 <br>
 
 The Linux kernel's interrupt processing revolves around the interrupt descriptor structure **struct irq_desc**. The kernel offers two ways to organize these interrupt descriptors:
+![sparse-irq-1](https://github.com/user-attachments/assets/d646814f-dda9-481e-8074-7ab438b790e5)
+
+<br>
 
 #### Sparse IRQ:
 - If the kernel config option **CONFIG_SPARSE_IRQ** is enabled, dynamically allocate struct irq_desc structures for required IRQ numbers and manage them using Radix Tree.
@@ -27,8 +30,13 @@ The Linux kernel's interrupt processing revolves around the interrupt descriptor
 
 #### Flat IRQ:
 - If you do not use kernel options, an array of irq_dest structures equal to the max IRQ number is statically allocated and used at compile time.
-
 Regardless of the above ways, the corresponding interrupt descriptor in Linux can ultimately be found using the Linux IRQ number.
+
+
+The grey section on the left represents the L2 software layer, where the interrupt controller driver initializes struct irq_chip and irq_domain. The grey area at the top of the figure depicts the creation of the interrupt descriptor, accomplished during the process of acquiring device interrupt information. The remaining parts of the figure are configured during L4 software layer device driver initialization, including setting up "struct irqaction" to link to the specific interrupt handler function.
+
+
+
 
 
 

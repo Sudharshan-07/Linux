@@ -525,7 +525,9 @@ In irq_set_chip(), if sparse IRQ(CONFIG_SPARSE_IRQ) is not used, we mark the cor
 
 Why are IRQ Domains (interrupt domains) necessary in the Linux kernel?
 
-In the early systems, there was only one interrupt controller, and the interrupt numbers were all different so hw irq pin 5 corresponds to sw irq 5 which driver can use and handle the interrupt, here is a simple single interrupt controller block diagram:
+In the early systems, there was only one interrupt controller, and the interrupt numbers were all different, for example, hw irq pin 5 corresponds to sw irq 5 which the (L4 level) device driver can use and handle the interrupt. 
+
+The below figure is an example of a legacy interrupt controller block diagram:
 
 ![interrupt_domain_example_1](https://github.com/user-attachments/assets/8152a9f2-898c-4c34-8e11-eaf0945f963b)
 

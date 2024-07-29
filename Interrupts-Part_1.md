@@ -78,7 +78,8 @@ Typically, six data structures are involved in the kernel IRQ subsystem:
 #### 6. struct irq_data 
 
 #### Below are the data structures that represent an interrupt controller/interrupt line/interrupt action handler relationship:
-![f1f9135ff0cb4be0baeb379329bdcac4](https://github.com/Sudharshan-07/Linux/assets/52316856/ed4ed341-53f9-439d-a1a7-644d819469d9)
+
+![irq-structure-links](https://github.com/user-attachments/assets/bf8d7358-212c-48d9-9796-6a035008e383)
 
 
 

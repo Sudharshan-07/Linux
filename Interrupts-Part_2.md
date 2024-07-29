@@ -800,6 +800,8 @@ Refer to the below call flow for a complete understanding of the interrupt subsy
 
 <br>  
 
+#### Note: From the above-depicted call flow picture, the L2 layer is till __handle_domain_irq(), post that L3 layer starts which we will analyze in the next part.
+
 **This concludes the introduction to Architecture-Dependent and Interrupt Controller Driver (Layer 2).**
 
 

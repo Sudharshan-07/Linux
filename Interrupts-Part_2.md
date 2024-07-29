@@ -800,7 +800,10 @@ Refer to the below call flow for a complete understanding of the interrupt subsy
 
 <br>  
 
-This concludes the introduction to Architecture-Dependentant and interrupt controller driver(layer 2). 
+**This concludes the introduction to Architecture-Dependent and Interrupt Controller Driver (Layer 2).**
+
+
+
 
 
 

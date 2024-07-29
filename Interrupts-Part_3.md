@@ -147,7 +147,11 @@ struct irq_desc {
 } ____cacheline_internodealigned_in_smp;
 ```
 
+The following figure shows how one irq descriptor is allocated and initialized:
 
+![alloc_desc-1](https://github.com/user-attachments/assets/5b92fdc3-9c8c-4c3a-80b8-4aa924dd89d6)
+
+<br>
 
 
 

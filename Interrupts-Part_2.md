@@ -720,6 +720,30 @@ The following figure illustrates the three different approaches taken by the **i
 
 <br>
 
+In Summary, The hardware interrupt numbers of each controller in an SoC can be the same, but the interrupt numbers mapped in the Linux kernel are ultimately unique because of the irq_domain.
+
+#### Hierarchy IRQ domain
+
+Let's look at an interrupt-delivering path on architecture with multiple interrupt controllers involved in delivering an interrupt from the device to the target CPU. For example on x86 platforms:
+```
+  Device --> IOAPIC -> Interrupt remapping Controller -> Local APIC -> CPU
+```
+
+There are three interrupt controllers involved:
+
+1) IOAPIC controller
+2) Interrupt remapping controller
+3) Local APIC controller
+
+To support such a hardware topology and make software architecture match hardware architecture, an irq_domain data structure is built for each interrupt controller, and those irq_domains are organized into a hierarchy. When constructing the irq_domain hierarchy, the irq_domain near the device is a child(here IOAPIC) and the irq_domain near the CPU is the [parent](https://elixir.bootlin.com/linux/v4.10/source/include/linux/irqdomain.h#L140)(here Local APIC). So a hierarchy structure as below will be built for the example above:
+
+	Local APCI irq_domain (root irq_domain to manage CPU vectors)
+		^
+		|
+	Interrupt Remapping irq_domain (manage irq_remapping entries)
+		^
+		|
+	IOAPIC irq_domain (manage IOAPIC delivery entries/pins).
 
 
 

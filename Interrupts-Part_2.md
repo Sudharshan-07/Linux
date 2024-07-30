@@ -774,7 +774,7 @@ The code is relatively simple, as follows:
 ```
 Refer to the below illustration for the code flow:
 
-![Arch-depent-flow](https://github.com/user-attachments/assets/2d98a82a-d5ec-40e8-86d2-69a71e182501)
+![arch-specific-code-flow](https://github.com/user-attachments/assets/10613a09-786d-460b-a45c-b55e03069dfb)
 
 <br>
 

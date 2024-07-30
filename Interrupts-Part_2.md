@@ -778,7 +778,7 @@ Refer to the below illustration for the code flow:
 
 <br>
 
-When an interrupt is triggered, the processor switches to the exception vector table to find the corresponding entry. During the GIC driver init, the **set_handle_irq** interface is called to set **handle_arch_irq** the function pointer, so it points to the interrupt **gic_handle_irq**. so when the interrupt is triggered, execution will jump to **gic_handle_irq** which is the GIC's interrupt handler.
+When an interrupt is triggered, the processor switches to the exception vector table to find the corresponding entry. During the GIC driver init, the **set_handle_irq** interface is called to set the **handle_arch_irq** function pointer pointing to **gic_handle_irq**. so when the interrupt is triggered, execution will jump to **gic_handle_irq** which is the GIC's interrupt handler.
 
 
 When executing the "gic_handle_irq" handler on an ARM-based platform, there are two scenarios:

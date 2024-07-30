@@ -329,11 +329,13 @@ This phase is dynamic and occurs when an interrupt signal is received. The proce
 - For non-threaded interrupts, the registered handler function is called directly.
 - For threaded interrupts, the kernel thread is woken up, and the handler function is executed within this thread context.
 
+<br><br>
 
-Done. We have covered the basics of the Interrupt subsystem of the Linux Kernel.
+#### Done. We have covered the basics of the Interrupt subsystem of the Linux Kernel.
 
+<br>
 
-References:
+#### References:<br>
 https://www.cnblogs.com/LoyenWang/p/13052677.html <br>
 http://jake.dothome.co.kr/irq-desc/ <br>
 https://www.cnblogs.com/zyly/p/15952962.html#_label3_2_1 <br>

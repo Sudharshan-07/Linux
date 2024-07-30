@@ -243,9 +243,35 @@ The **__setup_irq** function completes interrupt-related settings, including int
 - Interrupt threading creates a kernel thread for each interrupt. If the interrupt is shared, the corresponding irqaction structures are linked in a list. Each irqaction has a thread_mask bitmap field. The interrupt can only be unmasked after all shared interrupts are processed and the interrupt mask is released.
 
 
+## When a peripheral triggers an interrupt signal, how is the interrupt handler ultimately called?
+
+After completing the interrupt registration, the organizational relationship between all relevant structures has been established. The remaining task is to handle the interrupt when it occurs.
+
+Let's now review the architecture-dependant processing flow:
+
+![Arch-depent-flow](https://github.com/user-attachments/assets/432834e4-59c6-4b8e-8614-8e67da456194)
+
+<br>
 
 
+After an interrupt is received, it first jumps to the entry in the exception vector table. From there, it follows a series of callback steps before ultimately calling generic_handle_irq to complete the interrupt processing.
 
+The processing within **generic_handle_irq** is as follows:
+
+![generic_handle_irq](https://github.com/user-attachments/assets/32fbc274-3ef9-436b-a178-4a28a3eb57f2)
+
+<br>
+
+The **generic_handle_irq** function eventually calls **desc->handle_irq()**, which was set up during the mapping process. This involves calling **irq_domain_set_info()** to configure the function pointer, such as **handle_fasteoi_irq or handle_percpu_devid_irq**.
+
+**handle_fasteoi_irq:** 
+- This function handles shared interrupts by traversing the linked list of irqaction structures and calling each **action->handler()** function. This handler is the interrupt processing function registered by the device driver using **request_irq() or request_threaded_irq()**. If the interrupt is threaded, it also triggers __irq_wake_thread() to wake up the kernel thread.
+
+**handle_percpu_devid_irq:** 
+- This function handles per-CPU interrupts. It involves calling the interrupt controller’s processing function to perform hardware operations. Additionally, it calls action->handler() to process the interrupt.
+
+
+Next, let's examine the process of waking up a thread after interrupt handling, including the functions __handle_irq_event_percpu() and __irq_wake_thread():
 
 
 

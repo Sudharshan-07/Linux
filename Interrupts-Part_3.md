@@ -282,7 +282,51 @@ The function __handle_irq_event_percpu calls __irq_wake_thread, which will wake 
 
 The function irq_wait_for_interrupt determines the wake-up condition of the interrupt thread. If the condition is met, it sets the current task to the TASK_RUNNING state and returns 0, allowing interrupt processing to proceed. Otherwise, it calls schedule(), releasing the CPU, and setting the task to the TASK_INTERRUPTIBLE state (interruptible sleep).
 
+## SUMMARY:
+Interrupt Processing Overview
 
+Interrupt processing in the Linux kernel can generally be divided into two main parts:
+1. From Top to Bottom.
+2. From Bottom to Top.
+
+<img width="984" alt="Interrupt-process-overview" src="https://github.com/user-attachments/assets/a479bd4f-fb39-4409-b125-5873cb2aafba">
+
+<br>
+
+### 1. From Top to Bottom: Establishing the Interrupt Descriptor
+This phase involves setting up the static relationships necessary for interrupt handling and the process includes:
+
+**Parsing Interrupt Source Information:**
+- Interrupt sources are described in the device tree (DT) or ACPI tables.
+- This information is loaded into memory and parsed during system startup.
+
+**Mapping Hardware Interrupt Number to Linux IRQ Number:**
+- Using structures like irq_domain, the hardware interrupt number (hwirq) is mapped to a Linux IRQ number.
+- Functions like irq_create_fwspec_mapping or irq_create_of_mapping help in this mapping process.
+
+**Allocating and Initializing irq_desc:**
+- The irq_desc structure is allocated and initialized.
+- This involves creating mappings, allocating descriptors, and initializing fields.
+
+**Registering the Interrupt:**
+- Using functions like request_irq or request_threaded_irq, the interrupt is registered.
+- The handler function provided by the device driver is linked to the interrupt descriptor.
+
+### 2. From Bottom to Top: Handling the Interrupt
+This phase is dynamic and occurs when an interrupt signal is received. The process includes:
+
+**Receiving the Interrupt Signal:**
+- The interrupt controller (e.g., GIC for ARM platforms) detects the interrupt and forwards it to the processor.
+
+**Processor Enters Exception Mode:**
+- The processor switches to an exception mode and jumps to the entry of the exception vector table.
+
+**Calling Back Through Architecture-Specific Code:**
+- The interrupt is handled step-by-step, starting from the architecture-specific code and moving towards the generic interrupt handler.
+
+**Handling the Interrupt (Threaded or Non-Threaded):**
+- For non-threaded interrupts, the registered handler function is called directly.
+- For threaded interrupts, the kernel thread is woken up, and the handler function is executed within this thread context.
 
 
 

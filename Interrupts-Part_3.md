@@ -52,7 +52,7 @@ Regardless of the above ways, the corresponding interrupt descriptor in Linux ca
 
 Therefore, from **Fig 1**, The grey section on the left represents the L2 software layer, where the interrupt controller driver initializes struct irq_chip and irq_domain. The grey area at the top of the figure depicts the creation of the interrupt descriptor, accomplished during the process of acquiring device interrupt information. The remaining parts of the figure are configured during L4 software layer device driver initialization, including setting up "struct irqaction" to link to the specific interrupt handler function.
 
-Below is the structure declaration of irq_desc:
+##### Below is the structure declaration of irq_desc:
 ```
 /**
  * struct irq_desc - interrupt descriptor
@@ -165,6 +165,16 @@ The following figure shows how one irq descriptor is allocated and initialized:
 ### How do device drivers in the L4 level register interrupt?
 
 Linux Software engineers familiar with device drivers will know that drivers often call the **request_irq() or request_threaded_irq()** interfaces to register the interrupt handling function of the device. An **"irq"** parameter, which represents the Linux interrupt number, is required in these interfaces. This raises the question: where does this Linux interrupt number come from? How is the Linux IRQ number mapped to the interrupt number of a specific hardware device's interrupt pin?.
+
+How is the Linux IRQ number mapped to the interrupt number of a specific hardware device?
+
+<br>
+
+![retrive-interrupt-number-DTS](https://github.com/user-attachments/assets/62bd2e6a-ea50-4726-a7d3-05ac7510b910)
+
+<br>
+
+
 
 
 

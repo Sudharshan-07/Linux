@@ -249,7 +249,7 @@ After completing the interrupt registration, the organizational relationship bet
 
 Let's now review the architecture-dependant processing flow:
 
-![Arch-depent-flow](https://github.com/user-attachments/assets/432834e4-59c6-4b8e-8614-8e67da456194)
+![arch-specific-code-flow](https://github.com/user-attachments/assets/10613a09-786d-460b-a45c-b55e03069dfb)
 
 <br>
 

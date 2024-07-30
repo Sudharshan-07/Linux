@@ -271,7 +271,17 @@ The **generic_handle_irq** function eventually calls **desc->handle_irq()**, whi
 - This function handles per-CPU interrupts. It involves calling the interrupt controller’s processing function to perform hardware operations. Additionally, it calls action->handler() to process the interrupt.
 
 
-Next, let's examine the process of waking up a thread after interrupt handling, including the functions __handle_irq_event_percpu() and __irq_wake_thread():
+Next, let's examine the process of waking up a thread after interrupt handling, including the functions **__handle_irq_event_percpu() and __irq_wake_thread()**:
+
+
+![_irq_wake_thread](https://github.com/user-attachments/assets/dbef8bea-e193-4d25-b78a-9695d2fd7ce4)
+
+<br>
+
+The function __handle_irq_event_percpu calls __irq_wake_thread, which will wake up the interrupt kernel thread irq_thread. The irq_thread kernel thread initializes the function pointer handler_fn based on whether it is a forced interrupt thread for subsequent calls. The irq_thread kernel thread enters a loop while (!irq_wait_for_interrupt), processing the interrupt. When the conditions are met, it executes handler_fn, which eventually calls action->thread_fn, completing the interrupt handling.
+
+The function irq_wait_for_interrupt determines the wake-up condition of the interrupt thread. If the condition is met, it sets the current task to the TASK_RUNNING state and returns 0, allowing interrupt processing to proceed. Otherwise, it calls schedule(), releasing the CPU, and setting the task to the TASK_INTERRUPTIBLE state (interruptible sleep).
+
 
 
 

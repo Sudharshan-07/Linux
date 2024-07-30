@@ -333,6 +333,8 @@ This phase is dynamic and occurs when an interrupt signal is received. The proce
 
 #### Done. We have covered the basics of the Interrupt subsystem of the Linux Kernel.
 
+In the next part, we will cover how interrupts are processed for hierarchical interrupt controllers in an SoC.
+
 <br>
 
 #### References:<br>

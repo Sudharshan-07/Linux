@@ -811,7 +811,8 @@ Refer to the below call flow for a complete understanding of the interrupt subsy
 
 **References:** <br>
 https://www.cnblogs.com/LoyenWang/p/12996812.html <br>
-http://jake.dothome.co.kr/interrupts-2/
+http://jake.dothome.co.kr/interrupts-2/ <br>
+http://www.wowotech.net/irq_subsystem/irq-domain.html
 
 
 

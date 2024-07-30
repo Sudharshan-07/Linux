@@ -162,8 +162,9 @@ The following figure shows how one irq descriptor is allocated and initialized:
 3. When an interrupt is triggered, the L2 Layer determines the IRQ number from the hardware interrupt number, finds the associated irq_desc, and calls the corresponding interrupt handler function.
 
 
-### How do device drivers in the L4 level register interrupt?
+## How do device drivers in the L4 level register interrupt?
 
+### Step 1: Find the Linux irq number and it's respective struct irq_desc:
 Linux Software engineers familiar with device drivers will know that drivers often call the **request_irq() or request_threaded_irq()** interfaces to register the interrupt handling function of the device. An **"irq"** parameter, which represents the Linux interrupt number, is required in these interfaces. This raises the question: where does this Linux interrupt number come from? How is the Linux IRQ number mapped to the interrupt number of a specific hardware device's interrupt pin?.
 
 How is the Linux IRQ number mapped to the interrupt number of a specific hardware device?
@@ -182,12 +183,64 @@ If the mapping has already been created, the Linux IRQ number can be returned di
 1. Creates a ***struct irq_desc*** interrupt descriptor for the Linux IRQ number.
 2. Calls ***domain->ops->alloc*** to complete the mapping. In the ARM GICv2 driver, this corresponds to the gic_irq_domain_alloc function, which is crucial and introduced below.
 
+<br>
+
+The **"gic_irq_domain_alloc"** function call flow:
+
+![gic_irq_domain_allocs_call_flow](https://github.com/user-attachments/assets/ff7ec9d3-11e7-4a3e-90ca-4d2a12ac3e1e)
 
 
+<br>
+
+**gic_irq_domain_translate:** Responsible for parsing the interrupt number and trigger type (e.g., edge trigger, level trigger) described in the device tree for a particular device node.
+
+**gic_irq_domain_map:** Binds the hardware interrupt number to the Linux interrupt number, completing the mapping. Additionally, it initializes other fields in the irq_desc structure, most importantly setting the **irq_desc->handle_irq** function pointer. This pointer is the entry point for executing the interrupt handling process, which will be further detailed later.
+
+According to the range of hardware interrupt numbers, the **irq_desc->handle_irq** pointer is set to either the shared interrupt entry *handle_fasteoi_irq* or the private interrupt entry *handle_percpu_devid_irq*.
+
+#### After executing the above functions, two major tasks are completed:
+1. Mapping the hardware interrupt number to the Linux interrupt number and creating an interrupt descriptor for the Linux interrupt number.
+2. Initializing the data structure and setting the entry point for the interrupt handling process.
 
 
+### Step 2: Once the Linux IRQ number and its corresponding irq_desc is figured out, request the irq for our device driver:
 
+In the device driver, after obtaining the interrupt number (irq), it is typically used with **request_irq() or request_threaded_irq()** to register the interrupt. request_irq is used to register interrupts for normal processing(interrupt context), while request_threaded_irq is used for threaded interrupt processing(thread context) in the kernel.
 
+Before discussing the specific registration process, let's review the main interrupt flags:
+
+```
+#define IRQF_SHARED 0x00000080 //Multiple devices share an interrupt number, which requires peripheral hardware support
+#define IRQF_PROBE_SHARED 0x00000100 //Interrupt handler allows sharing mismatch to occur
+#define __IRQF_TIMER 0x00000200 //Clock interrupt
+#define IRQF_PERCPU 0x00000400 //Interrupt belonging to a specific CPU
+#define IRQF_NOBALANCING 0x00000800 //Disable interrupt balancing between CPUs
+#define IRQF_IRQPOLL 0x00001000 //Interrupts are used for round-robin
+
+#define IRQF_ONESHOT 0x00002000 //One-time triggered interrupts cannot be nested.
+1) The interrupt can be turned on only after the hardware interrupt processing is completed;
+2) It remains turned off in the interrupt threading until all thread_fn functions on the interrupt source are executed
+
+#define IRQF_NO_SUSPEND 0x00004000 //Do not turn off the interrupt during system sleep wakeup
+#define IRQF_FORCE_RESUME 0x00008000 //Must force the interrupt on during system wakeup
+#define IRQF_NO_THREAD 0x00010000 //Disable interrupt threading
+#define IRQF_EARLY_RESUME 0x00020000 //Resume in the syscore stage during system wakeup, without waiting until the device resume stage
+#define IRQF_COND_SUSPEND 0x00040000 //When sharing the interrupt with a NO_SUSPEND user, execute the interrupt processing function of this device
+```
+<br>
+
+![request_irq](https://github.com/user-attachments/assets/c1973c56-a453-40aa-b086-f499688d0a5d)
+
+<br>
+
+In the device driver(@L4 level), **request_irq or request_threaded_irq** are used to register the interrupt. If using request_irq, the thread processing function thread_fn is set to NULL. Once the hardware interrupt number and the Linux interrupt number have been mapped, the corresponding irq_desc can be obtained using the irq_to_desc interface.
+
+An irqaction structure is created and its fields are initialized, including assigning the passed interrupt handling function to the appropriate field.
+
+The **__setup_irq** function completes interrupt-related settings, including interrupt thread processing. By the way, why interrupt threading is needed in the Linux kernel?
+- Interrupt threading is implemented to minimize the duration that system interrupts are disabled, thereby improving the system's real-time performance. By handling interrupt processing in a separate thread, the critical section where interrupts are disabled is kept short, allowing other interrupts to be processed more quickly.
+
+- Interrupt threading creates a kernel thread for each interrupt. If the interrupt is shared, the corresponding irqaction structures are linked in a list. Each irqaction has a thread_mask bitmap field. The interrupt can only be unmasked after all shared interrupts are processed and the interrupt mask is released.
 
 
 

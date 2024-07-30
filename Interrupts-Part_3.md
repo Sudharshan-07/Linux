@@ -162,6 +162,13 @@ The following figure shows how one irq descriptor is allocated and initialized:
 3. When an interrupt is triggered, the L2 Layer determines the IRQ number from the hardware interrupt number, finds the associated irq_desc, and calls the corresponding interrupt handler function.
 
 
+#### How do device drivers in the L4 level register interrupt?
+
+Linux Software engineers familiar with device drivers will know that drivers often call the **request_irq() or request_threaded_irq()** interfaces to register the interrupt handling function of the device. An **"irq"** parameter, which represents the Linux interrupt number, is required in these interfaces. This raises the question: where does this Linux interrupt number come from? How is the Linux IRQ number mapped to the interrupt number of a specific hardware device's interrupt pin?.
+
+
+
+
 
 
 

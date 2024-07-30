@@ -322,11 +322,21 @@ This phase is dynamic and occurs when an interrupt signal is received. The proce
 - The processor switches to an exception mode and jumps to the entry of the exception vector table.
 
 **Calling Back Through Architecture-Specific Code:**
-- The interrupt is handled step-by-step, starting from the architecture-specific code and moving towards the generic interrupt handler.
+- The interrupt is handled step-by-step, starting from the architecture-specific code.
+- In the course of this, it finds the irq domain of the interrupt controller and moves towards the generic interrupt flow handler.
 
 **Handling the Interrupt (Threaded or Non-Threaded):**
 - For non-threaded interrupts, the registered handler function is called directly.
 - For threaded interrupts, the kernel thread is woken up, and the handler function is executed within this thread context.
+
+
+Done. We have covered the basics of the Interrupt subsystem of the Linux Kernel.
+
+
+References:
+https://www.cnblogs.com/LoyenWang/p/13052677.html <br>
+http://jake.dothome.co.kr/irq-desc/ <br>
+https://www.cnblogs.com/zyly/p/15952962.html#_label3_2_1 <br>
 
 
 

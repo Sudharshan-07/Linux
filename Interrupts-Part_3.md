@@ -174,6 +174,19 @@ How is the Linux IRQ number mapped to the interrupt number of a specific hardwar
 
 <br>
 
+The interrupt information of hardware devices is described in the device tree(DTS). During system startup, this information is loaded into memory and parsed. The L4 level device driver typically uses the **platform_get_irq() or irq_of_parse_and_map()** interfaces to create a mapping relationship (hardware interrupt number to Linux IRQ number) based on the information in the device tree.
+
+**[Interrupts-Part_2](https://github.com/Sudharshan-07/Linux/blob/Linux-driver-model/Interrupts-Part_2.md)** mentioned that **"struct irq_domain"** is used for this mapping. In the **irq_create_fwspec_mapping()** interface, the function first finds the matching IRQ domain and then calls back the function assigned to it. This IRQ domain is usually initialized in the interrupt controller driver. For example, consider ARM GICv2, it calls back to the function **"gic_irq_domain_hierarchy_ops"**.
+
+If the mapping has already been created, the Linux IRQ number can be returned directly. Otherwise, **irq_domain_alloc_irqs()** needs to generate the mapping relationship. This function completes two tasks:
+1. Creates an irq_desc interrupt descriptor for the Linux IRQ number.
+2. Calls domain->ops->alloc to complete the mapping. In the ARM GICv2 driver, this corresponds to the gic_irq_domain_alloc function, which is crucial and introduced below.
+
+
+
+
+
+
 
 
 

@@ -151,6 +151,7 @@ Those functions implement hardware interrupt flow control, i.e. notifying the in
 - chained_irq_enter() masks current interrupt, and acknowledges it if ack callback is set as well.
 - chained_irq_exit() unmasks interrupt.
 
+<br>
 
-Reference:
-https://blog.csdn.net/qq_18804879/article/details/132966631
+**Reference:** <br>
+https://blog.csdn.net/qq_18804879/article/details/132966631 <br>

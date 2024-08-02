@@ -80,23 +80,76 @@ And **"some_device_isr()"** will be called each time the level on the P4 pin of 
 All these actions occur at the hardware level. 
 
 #### Software Side Propagation:
-Now, let's see what happens at the software level. It proceeds in reverse order(from right to left in the picture):
+Now, let's break down what happens at the software level when an interrupt occurs. This process happens in reverse order compared to the hardware actions (from right to left in the picture):
 
-CPU now is in interrupt context in GIC interrupt handler. From gic_handle_irq() it calls handle_domain_irq(), which in turn calls generic_handle_irq(). See Documentation/gpio/driver.txt for details. Now we are in SoC's GPIO controller IRQ handler.
-SoC's GPIO driver also calls generic_handle_irq() to run handler, which is set for each particular pin. See for example how it's done in omap_gpio_irq_handler(). Now we are in MAX7325 IRQ handler.
-MAX7325 IRQ handler (here) calls handle_nested_irq(), so that all IRQ handlers of devices connected to MAX7325 ("Some device" IRQ handler, in our case) will be called in max732x_irq_handler() thread
-finally, IRQ handler of "Some device" driver is called
-IRQ domain API
-GIC driver, GPIO driver and MAX7325 driver -- they all are using IRQ domain API to represent those drivers as interrupt controllers. Let's take a look how it's done in MAX732x driver. It was added in this commit. It's easy to figure out how it works just by reading IRQ domain documentation and looking to this commit. The most interesting part of that commit is this line (in max732x_irq_handler()):
+**GIC Interrupt Handler:**
+- When the CPU receives an interrupt notification, it enters the interrupt context in the GIC interrupt handler.
+- The function [gic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/drivers/irqchip/irq-gic.c#L334) is called, which then calls handle_domain_irq().
+- [handle_domain_irq()](https://github.com/torvalds/linux/blob/v5.13/include/linux/irqdesc.h#L173) calls [generic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/kernel/irq/irqdesc.c#L640), which routes us to the SoC's GPIO controller interrupt handler. Refer to [Documentation/gpio/driver.txt]  (https://www.kernel.org/doc/Documentation/gpio/driver.txt) for more details.
+  
+**SoC's GPIO Controller IRQ Handler:**
+- In SoC's GPIO driver, [generic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/kernel/irq/irqdesc.c#L640) is again used to run the handler set for each specific pin.
+- For instance, in the [omap_gpio_irq_handler()](https://github.com/torvalds/linux/blob/master/drivers/gpio/gpio-omap.c#L559C20-L559C41), this mechanism is demonstrated. At this stage, we are now in the MAX7325 IRQ handler.
+  
+**MAX7325 IRQ Handler:**
+- The MAX7325 IRQ handler calls [handle_nested_irq()](https://github.com/torvalds/linux/blob/v5.13/drivers/gpio/gpio-max732x.c#L486).
+- This function ensures that all IRQ handlers of devices connected to the MAX7325 (such as the IRQ handler for "Some device") are invoked within the 
+  [max732x_irq_handler()](https://github.com/torvalds/linux/blob/v5.13/drivers/gpio/gpio-max732x.c#L473) thread.
 
+**"Some Device" IRQ Handler:**
+- Finally, the IRQ handler for the "Some device" driver is called.
+
+
+#### IRQ domain API:
+
+GIC driver, GPIO driver, and MAX7325 driver -- they all are using IRQ domain API to represent those drivers as interrupt controllers. Let's take a look at how it's done in the MAX732x driver. It was added in this commit. It's easy to figure out how it works just by reading IRQ domain documentation and looking at this commit. The most interesting part of that commit is this line (in max732x_irq_handler()):
+
+```
 handle_nested_irq(irq_find_mapping(chip->gpio_chip.irqdomain, level));
+```
+
 irq_find_mapping() will find linux IRQ number by hardware IRQ number (using IRQ domain mapping function). Then handle_nested_irq() function will be called, which will run IRQ handler of "Some device" driver.
 
-GPIOLIB_IRQCHIP
-Since many GPIO drivers are using IRQ domain in the same way, it was decided to extract that code to GPIOLIB framework, more specifically to GPIOLIB_IRQCHIP. From Documentation/gpio/driver.txt:
 
-To help out in handling the set-up and management of GPIO irqchips and the associated irqdomain and resource allocation callbacks, the gpiolib has some helpers that can be enabled by selecting the GPIOLIB_IRQCHIP Kconfig symbol:
+[Refer link 1](https://www.kernel.org/doc/Documentation/gpio/driver.txt), and [link 2](https://stackoverflow.com/questions/34377846/what-is-chained-irq-in-linux-when-are-they-need-to-used) to know and understand when to use chained irq handlers, generic chained irq handlers, nested irq handlers. This is very essential for a driver developer to decide how to register an interrupt handler based on the SoC design and requirements.
 
-gpiochip_irqchip_add(): adds an irqchip to a gpiochip. It will pass the struct gpio_chip* for the chip to all IRQ callbacks, so the callbacks need to embed the gpio_chip in its state container and obtain a pointer to the container using container_of(). (See Documentation/driver-model/design-patterns.txt)
-gpiochip_set_chained_irqchip(): sets up a chained irq handler for a gpio_chip from a parent IRQ and passes the struct gpio_chip* as handler data. (Notice handler data, since the irqchip data is likely used by the parent irqchip!) This is for the chained type of chip. This is also used to set up a nested irqchip if NULL is passed as handler.
-This commit converts IRQ domain API to GPIOLIB_IRQCHIP API in MAX732x driver.
+Below is a brief about the concept:
+There are two approaches on calling interrupt handlers for child interrupt controllers in the IRQ handler of the parent interrupt controller.
+
+**1. Chained interrupts:**
+- "chained" means that those interrupts are just chain of function calls (for example, SoC's GPIO module interrupt handler is being called from GIC interrupt 
+  handler, just as a function call)
+- generic_handle_irq() is used for interrupts chaining
+- child IRQ handlers are being called inside of parent HW IRQ handler
+- you can't call functions that may sleep in chained (child) interrupt handlers, because they are still in atomic context (HW interrupt)
+- this approach is commonly used in drivers for GPIO controllers inside SoC itself.
+
+**2. Nested interrupts:**
+- "nested" means that those interrupts can be interrupted by another interrupt; but they are not really HW IRQs, but rather threaded IRQs
+  handle_nested_irq() is used for creating nested interrupts
+- Child IRQ handlers are being called inside of new thread created by handle_nested_irq() function; we need them to be run in process context, so that we can 
+  call sleeping bus functions (like I2C functions that may sleep)
+- You can call functions that may sleep inside of nested (child) interrupt handlers.
+- This approach is commonly used in drivers for external chips, like GPIO expanders, because they are usually connected to SoC via I2C bus, and I2C functions may 
+  sleep
+
+#### Regarding the drivers mentioned earlier:
+
+- The **irq-gic** driver uses the CHAINED GPIO irqchips approach to handle systems with multiple GICs.
+- The **gpio-omap** driver employs the GENERIC CHAINED GPIO irqchips approach. Refer to this [commit](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=450fa54cfd66e3dda6eda26256637ee8928af12a) for details. It was converted from the regular CHAINED GPIO irqchips to utilize a threaded IRQ handler in real-time kernels and a hard IRQ handler in non-RT kernels.
+- The **gpio-max732x** driver utilizes the NESTED THREADED GPIO irqchips approach. [refer](https://github.com/torvalds/linux/blob/v5.13/drivers/gpio/gpio-max732x.c#L486)
+
+#### what does chained_irq_enter and chained_irq_exit do?
+
+Those functions implement hardware interrupt flow control, i.e. notifying the interrupt controller chip when to mask and unmask the current interrupt.
+
+**For FastEOI interrupt controllers:**
+- chained_irq_enter() do nothing.
+- chained_irq_exit() calls **irq_eoi()** callback to tell the interrupt controller that interrupt processing is finished.
+
+**For interrupt controllers with mask/unmask/ack capabilities:**
+- chained_irq_enter() masks current interrupt, and acknowledges it if ack callback is set as well.
+- chained_irq_exit() unmasks interrupt.
+
+
+

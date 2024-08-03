@@ -67,7 +67,7 @@ Now we can register an interrupt handler for the pin(in the "Some device" driver
 
 ```
 devm_request_threaded_irq(core->dev, core->gpio_irq, NULL,
-        some_device_isr, IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+        some_device_threaded_isr, IRQF_TRIGGER_RISING | IRQF_ONESHOT,
         dev_name(core->dev), core);
 ```
 

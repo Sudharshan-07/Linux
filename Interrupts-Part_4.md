@@ -125,10 +125,10 @@ There are two approaches on calling interrupt handlers for child interrupt contr
 - this approach is commonly used in drivers for GPIO controllers inside SoC itself.
 
 **2. Nested interrupts:**
-- "nested" means that those interrupts can be interrupted by another interrupt; but they are not really HW IRQs, but rather threaded IRQs
-  handle_nested_irq() is used for creating nested interrupts
-- Child IRQ handlers are being called inside of new thread created by handle_nested_irq() function; we need them to be run in process context, so that we can 
-  call sleeping bus functions (like I2C functions that may sleep)
+- "nested" means that those interrupts can be interrupted by another interrupt, but they are not HW IRQs, but rather threaded IRQs.
+- handle_nested_irq() is used for creating nested interrupts
+- Child IRQ handlers are being called inside of a new thread created by the handle_nested_irq() function; we need them to be run in process context so that we 
+  can call sleeping bus functions (like I2C functions that may sleep)
 - You can call functions that may sleep inside of nested (child) interrupt handlers.
 - This approach is commonly used in drivers for external chips, like GPIO expanders, because they are usually connected to SoC via I2C bus, and I2C functions may 
   sleep

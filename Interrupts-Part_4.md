@@ -23,7 +23,7 @@ Consider the next configuration:
 
 <br>
 
-"Some device" changes the level on the P4 pin, causing the MAX7325 to generate an interrupt. This interrupt from the MAX7325 is connected to the GPIO4 IP-core (inside the SoC), which uses line #29 of the GPIO4 module to notify the CPU about the interrupt. Therefore, the MAX7325 is cascaded to the GPIO4 controller. Additionally, GPIO4 can also act as an interrupt controller and is cascaded to the GIC interrupt controller.
+"Some device" changes the level on the P4 pin, causing the MAX7325 to generate an interrupt. This interrupt from the MAX7325 is connected to the GPIO4 IP-core (inside the SoC), which uses line "gpio4_irq" of the GPIO4 module to notify the CPU about the interrupt. Therefore, the MAX7325 is cascaded to the GPIO4 controller. Additionally, GPIO4 can also act as an interrupt controller and is cascaded to the GIC interrupt controller.
 
 ### Device tree:
 Let's declare the above configuration in the device tree. We can use bindings from [Documentation/devicetree/bindings/gpio/gpio-max732x.txt](https://kernel.googlesource.com/pub/scm/linux/kernel/git/jikos/livepatching/+/9ec0de0ee0c9f0ffe4f72da9158194121cc22807/Documentation/devicetree/bindings/gpio/gpio-max732x.txt) as reference:

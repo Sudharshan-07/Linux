@@ -85,7 +85,7 @@ Now, let's break down what happens at the software level when an interrupt occur
 **GIC Interrupt Handler:**
 - When the CPU receives an interrupt notification, it enters the interrupt context in the GIC interrupt handler.
 - The function [gic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/drivers/irqchip/irq-gic.c#L334) is called, which then calls handle_domain_irq().
-- [handle_domain_irq()](https://github.com/torvalds/linux/blob/v5.13/include/linux/irqdesc.h#L173) calls [generic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/kernel/irq/irqdesc.c#L640), which routes us to the SoC's GPIO controller interrupt handler. Refer to [Documentation/gpio/driver.txt]  (https://www.kernel.org/doc/Documentation/gpio/driver.txt) for more details.
+- [handle_domain_irq()](https://github.com/torvalds/linux/blob/v5.13/include/linux/irqdesc.h#L173) calls [generic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/kernel/irq/irqdesc.c#L640), which routes us to the SoC's GPIO controller interrupt handler. Refer to [Documentation/gpio/driver.txt](https://www.kernel.org/doc/Documentation/gpio/driver.txt) for more details.
   
 **SoC's GPIO Controller IRQ Handler:**
 - In SoC's GPIO driver, [generic_handle_irq()](https://github.com/torvalds/linux/blob/v5.13/kernel/irq/irqdesc.c#L640) is again used to run the handler set for each specific pin.

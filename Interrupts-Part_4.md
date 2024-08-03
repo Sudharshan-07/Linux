@@ -71,7 +71,7 @@ devm_request_threaded_irq(core->dev, core->gpio_irq, NULL,
         dev_name(core->dev), core);
 ```
 
-And **"some_device_isr()"** will be called each time the level on the P4 pin of the MAX7325 transitions from low to high (rising edge). How does this work? From left to right, if you refer to the picture above:
+And **"some_device_threaded_isr()"** will be called each time the level on the P4 pin of the MAX7325 transitions from low to high (rising edge). How does this work? From left to right, if you refer to the picture above:
 
 - "Some device" changes the level on P4 of the MAX7325.
 - The MAX7325 changes the level on its INT pin.
@@ -102,13 +102,13 @@ Now, let's break down what happens at the software level when an interrupt occur
 
 #### IRQ domain API:
 
-GIC driver, GPIO driver, and MAX7325 driver -- they all are using IRQ domain API to represent those drivers as interrupt controllers. Let's take a look at how it's done in the MAX732x driver. It was added in this commit. It's easy to figure out how it works just by reading IRQ domain documentation and looking at this commit. The most interesting part of that commit is this line (in max732x_irq_handler()):
+GIC driver, GPIO driver, and MAX7325 driver all use IRQ domain API to represent those drivers as interrupt controllers. Let's look at how it's done in the MAX732x driver. It was added in this commit. It's easy to figure out how it works by reading IRQ domain documentation and looking at this commit. The most interesting part of that commit is this line (in max732x_irq_handler()):
 
 ```
 handle_nested_irq(irq_find_mapping(chip->gpio_chip.irqdomain, level));
 ```
 
-irq_find_mapping() will find linux IRQ number by hardware IRQ number (using IRQ domain mapping function). Then handle_nested_irq() function will be called, which will run IRQ handler of "Some device" driver.
+irq_find_mapping() will find the Linux IRQ number by hardware IRQ number (using the IRQ domain mapping function). Then **handle_nested_irq()** function will be called, which will run the IRQ handler of the "Some device" driver.
 
 
 [Refer link 1](https://www.kernel.org/doc/Documentation/gpio/driver.txt), and [link 2](https://stackoverflow.com/questions/34377846/what-is-chained-irq-in-linux-when-are-they-need-to-used) to know and understand when to use chained irq handlers, generic chained irq handlers, nested irq handlers. This is very essential for a driver developer to decide how to register an interrupt handler based on the SoC design and requirements.

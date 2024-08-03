@@ -45,8 +45,8 @@ expander: max7325@6d {
 ```
 The meaning of properties is as follows:
 - **interrupt-controller** property defines that the device generates interrupts; it will be needed further to use this node as interrupt-parent in the "Some device" node.
-- **#interrupt-cells:** defines the format of interrupts property; in our case, it's 2: 1 cell for the line number and 1 cell for the interrupt type
-interrupt-parent and interrupts properties describe interrupt line connection.
+- **#interrupt-cells:** defines the format of interrupts property; in our case, the  2 cell represents: 1 cell for the interrupt number and 1 cell for the interrupt type.
+- **interrupt-parent and interrupts** properties in the above snippet describe interrupt connection.
 
 Let's assume we have a driver for the MAX7325 and a driver for "Some device," both running on the CPU. In the "Some device" driver, we want to request an interrupt for an event when "Some device" changes the level on the P4 pin of the MAX7325.
 

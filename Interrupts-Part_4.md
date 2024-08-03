@@ -102,7 +102,7 @@ Now, let's break down what happens at the software level when an interrupt occur
 
 #### IRQ domain API:
 
-GIC driver, GPIO driver, and MAX7325 driver all use IRQ domain API to represent those drivers as interrupt controllers. Let's look at how it's done in the MAX732x driver. It was added in this commit. It's easy to figure out how it works by reading IRQ domain documentation and looking at this commit. The most interesting part of that commit is this line (in max732x_irq_handler()):
+GIC driver, GPIO driver, and MAX7325 driver all use IRQ domain API to represent those drivers as interrupt controllers. Let's look at how it's done in the MAX732x driver. The most interesting part of that is the below function call in the max732x_irq_handler() irq handler function:
 
 ```
 handle_nested_irq(irq_find_mapping(chip->gpio_chip.irqdomain, level));

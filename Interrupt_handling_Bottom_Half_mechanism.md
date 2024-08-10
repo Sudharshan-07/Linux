@@ -10,11 +10,15 @@ Dividing interrupt handling into Top-half and Bottom-half improves the system's 
 
 The Bottom-half mechanism includes **softirq, tasklets, workqueues, and interrupt threading**. These components work together to handle deferred tasks, which is the focus of this discussion.
 
-Understanding various contexts is crucial for comprehending interrupt handling. Different contexts are distinguished by the state of the **task_struct structure and thread_info.preempt_count:**
+Understanding various contexts is crucial for comprehending interrupt handling. Different contexts are distinguished by the state of the **task_struct structure and thread_info.preempt_count.**
 
-**PREEMPT_BITS:** Tracks how many times preemption has been disabled. The value increments when preemption is disabled and decrements when it is enabled. <br>
-**SOFTIRQ_BITS:** Manages the synchronization of the Bottom-half; it increments when the Bottom-half is disabled and decrements when it is enabled. <br>
-**HARDIRQ_BITS:** Indicates that the system is in a hardware interrupt context. <br>
+**struct task_struct:** structure's "thread_info.preempt_count" field is used to track the current task's context status. <br>
+
+**PREEMPT_BITS:** This field records how many times preemption has been disabled. The value increments by 1 each time preemption is disabled and decrements by 1 when it is enabled. <br>
+
+**SOFTIRQ_BITS:** This field is used for synchronization during the Bottom-half processing. It increments by 1 when the Bottom-half is disabled and decrements by 1 when it is enabled. <br>
+
+**HARDIRQ_BITS:** This field indicates when the system is in a hardware interrupt context. <br>
 
 With this background covered, let's dive into the details. <br>
 

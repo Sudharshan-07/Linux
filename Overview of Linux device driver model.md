@@ -54,11 +54,11 @@ drwxr-xr-x   3 root root 0 Mar 18 17:45 power
 
 ## 2. Why Linux driver model/Unified device model?
   
-One of the stated goals for the 2.5 development cycle was the creation of a unified device model for the kernel. **Previous kernels had no single data structure to which they could turn to obtain information about how the system is put together**. Despite this lack of information, things worked well for some time. The demands of newer systems, with their more complicated topologies and need to support features such as **power management,** made it clear, however, that a general abstraction describing the structure of the system was needed.
+One of the goals for the 2.5 development cycle was to create a unified device model for the kernel. **Previous kernels had no single data structure to which they could turn to obtain information about how the system is put together**. Despite this lack of information, things worked well for some time. The demands of newer systems, with their more complicated topologies and need to support features such as **power management,** made it clear, however, that a general abstraction describing the system's structure was needed.
 
 The Linux kernel 2.6 device model provides that abstraction. It is now used within the kernel to support a wide variety of tasks, including:
 
-**2.1 Power management and system shutdown:** <br>
+**2.1 [Power management and system shutdown](https://elixir.bootlin.com/linux/v6.12.6/source/drivers/base/core.c#L4810):** <br>
 When a device operation is in progress and the system receives a shutdown command, the kernel will use the driver model(kobjects/ksets) to traverse along the device lists and call the shutdown/release callbacks appropriately which helps in gracefully shutting down the whole system, where the shutdown/release callbacks(of the respective device drivers) will properly get the device to a stable state appropriately.
 
 For example, a USB host adaptor cannot be shut down before dealing with all of the devices connected to that adaptor. The device model enables a traversal of the system's hardware in the right order. 

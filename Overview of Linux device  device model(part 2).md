@@ -26,3 +26,4 @@ This section briefs about how the Linux device driver model is implemented and t
 1. https://www.slideserve.com/susane/chapter-14-the-linux-device-model <br>
 2. https://carlyleliu.github.io/2020/Linux%E9%A9%B1%E5%8A%A8%E4%B9%8B%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B/ <br>
 3. https://gist.github.com/carloscn/3f0179ecfa599969556e86eb80555266#user-content-fnref-2-443c0747c05ab3e7bb6acd3ca6f58809 <br>
+4. https://linux-kernel-labs.github.io/refs/heads/master/labs/device_model.html <br>
